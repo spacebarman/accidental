@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://db.onlinewebfonts.com/c/d45f96029e61832fd84afffd3068b768?family=DIN+Condensed+Bold"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <title>Accidental</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        color: #444;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "DIN Condensed Bold", "DIN Condensed", sans-serif;
+      }
+
+      .wrap {
+        text-align: center;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .line {
+        margin: 0.2rem 0;
+        font-size: 300%;
+      }
+
+      #soon {
+        visibility: hidden;
+        opacity: 0;
+      }
+
+      #soon.show {
+        visibility: visible;
+        animation: fadeSoon 3s linear forwards;
+      }
+
+      @keyframes fadeSoon {
+        0% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap" id="trigger">
+      <div class="line">SPACEBARMAN</div>
+      <div class="line">ACCIDENTAL</div>
+      <div class="line" id="soon">(SOON)</div>
+    </div>
+
+    <script>
+      const trigger = document.getElementById("trigger");
+      const soon = document.getElementById("soon");
+      let timerId;
+
+      trigger.addEventListener("click", () => {
+        clearTimeout(timerId);
+        soon.classList.remove("show");
+        void soon.offsetWidth;
+        soon.classList.add("show");
+        timerId = setTimeout(() => {
+          soon.classList.remove("show");
+          }, 3000);
+      });
+    </script>
+  </body>
+</html>

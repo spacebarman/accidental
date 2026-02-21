@@ -3,81 +3,67 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      href="https://db.onlinewebfonts.com/c/d45f96029e61832fd84afffd3068b768?family=DIN+Condensed+Bold"
-      rel="stylesheet"
-      type="text/css"
-    />
     <title>Accidental</title>
     <style>
       html,
       body {
         margin: 0;
-        width: 100%;
-        height: 100%;
+        width: 100vw;
+        height: 100vh;
         background: #000;
-        color: #444;
       }
 
       body {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: "DIN Condensed Bold", "DIN Condensed", sans-serif;
       }
 
-      .wrap {
-        text-align: center;
-        cursor: pointer;
-        user-select: none;
+      .grid {
+        width: 80vmin;
+        height: 80vmin;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(4, 1fr);
       }
 
-      .line {
-        margin: 0.2rem 0;
-        font-size: 300%;
+      .cell {
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+        transition: opacity 150ms linear;
       }
 
-      #soon {
-        visibility: hidden;
-        opacity: 0;
+      .cell:hover {
+        opacity: 0.5;
       }
 
-      #soon.show {
-        visibility: visible;
-        animation: fadeSoon 3s linear forwards;
-      }
-
-      @keyframes fadeSoon {
-        0% {
-          opacity: 1;
-        }
-        100% {
-          opacity: 0;
+      @media (max-width: 768px) {
+        .grid {
+          width: 100vmin;
+          height: 100vmin;
         }
       }
     </style>
   </head>
   <body>
-    <div class="wrap" id="trigger">
-      <div class="line">SPACEBARMAN</div>
-      <div class="line">ACCIDENTAL</div>
-      <div class="line" id="soon">(SOON)</div>
+    <div class="grid">
+      <div class="cell" style="background-image: url('images/thumbnails/cover00.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover01.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover02.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover03.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover04.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover05.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover06.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover07.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover08.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover09.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover10.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover11.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover12.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover13.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover14.jpg')"></div>
+      <div class="cell" style="background-image: url('images/thumbnails/cover15.jpg')"></div>
     </div>
-
-    <script>
-      const trigger = document.getElementById("trigger");
-      const soon = document.getElementById("soon");
-      let timerId;
-
-      trigger.addEventListener("click", () => {
-        clearTimeout(timerId);
-        soon.classList.remove("show");
-        void soon.offsetWidth;
-        soon.classList.add("show");
-        timerId = setTimeout(() => {
-          soon.classList.remove("show");
-          }, 3000);
-      });
-    </script>
   </body>
 </html>

@@ -45,7 +45,7 @@
         font-size: var(--brand-size);
         letter-spacing: 0.02em;
         line-height: 1;
-        color: #e6e6e6;
+        color: #666666;
         text-transform: uppercase;
         pointer-events: none;
       }
@@ -71,7 +71,7 @@
 
       .brand-info:hover::after {
         opacity: 1;
-        color: #e6e6e6;
+        color: #bbbbbb;
       }
 
       .grid {
@@ -88,14 +88,20 @@
         background-size: cover;
         background-repeat: no-repeat;
         transition: opacity 150ms linear;
+        filter: brightness(0.7);
       }
 
       .cell:hover {
         opacity: 0.5;
       }
 
+      .cell.active:hover {
+        opacity: 1;
+      }
+
       .cell.active {
-        box-shadow: inset 0 0 20px 8px #fff;
+        box-shadow: inset 0 0 40px 20px #fff;
+        filter: brightness(1);
       }
 
       .cell.next {
@@ -105,10 +111,10 @@
       @keyframes nextPulse {
         0%,
         100% {
-          filter: brightness(1);
+          filter: brightness(.8);
         }
         50% {
-          filter: brightness(1.8);
+          filter: brightness(2.5);
         }
       }
 
@@ -119,7 +125,7 @@
       .progress {
         width: 100%;
         height: 8px;
-        background: #5c5c5c;
+        background: #3c3c3c;
         opacity: 0;
         transition: opacity 150ms linear;
       }
@@ -131,7 +137,7 @@
       .progress-fill {
         width: 0%;
         height: 100%;
-        background: #8d8d8d;
+        background: #adadad;
       }
 
       @media (max-width: 768px) {
@@ -201,6 +207,7 @@
       let activeIndex = 0;
       let activeCell = null;
       let nextCell = null;
+      let nextIndex = 0;
 
       function showUi() {
         if (!hasStarted) {
@@ -227,6 +234,7 @@
 
       function setNextCell(index) {
         clearNextCell();
+        nextIndex = index;
         nextCell = cells[index];
         nextCell.classList.add("next");
       }
@@ -282,7 +290,6 @@
       });
 
       audio.addEventListener("ended", () => {
-        const nextIndex = getRandomNextIndex();
         playTrack(nextIndex);
       });
 
@@ -291,7 +298,8 @@
           activeCell.classList.add("active");
         }
         progress.classList.add("is-visible");
-        setNextCell(getRandomNextIndex());
+        const randNextIndex = getRandomNextIndex();
+        setNextCell(randNextIndex);
       });
 
       audio.addEventListener("pause", () => {

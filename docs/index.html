@@ -253,10 +253,16 @@
       }
 
       function playTrack(index) {
+        if (activeCell) {
+          activeCell.style.backgroundSize = "100% 100%";
+        }
         activeIndex = index;
         setActiveCell(index);
         clearNextCell();
         progressFill.style.width = "0%";
+        if (activeCell) {
+          activeCell.style.backgroundSize = "100% 100%";
+        }
         audio.src = playlist[index];
         audio.currentTime = 0;
         audio.play();
@@ -287,6 +293,11 @@
 
         const progressValue = (audio.currentTime / audio.duration) * 100;
         progressFill.style.width = `${progressValue}%`;
+
+        if (activeCell) {
+          const zoomLevel = 100 + (progressValue * 1);
+          activeCell.style.backgroundSize = `${zoomLevel}% ${zoomLevel}%`;
+        }
       });
 
       audio.addEventListener("ended", () => {
@@ -309,6 +320,10 @@
         progress.classList.remove("is-visible");
         clearNextCell();
       });
+
+      // Initialize with a random "next" tile on page load
+      const initialNextIndex = Math.floor(Math.random() * playlist.length);
+      setNextCell(initialNextIndex);
 
     </script>
   </body>

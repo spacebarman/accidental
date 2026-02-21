@@ -3,8 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://db.onlinewebfonts.com/c/954a505bdd1fd46577f8b93badf61c8c?family=DIN+Condensed"
+      rel="stylesheet"
+      type="text/css"
+    />
     <title>Accidental</title>
     <style>
+      :root {
+        --grid-size: 80vmin;
+        --brand-size: calc(var(--grid-size) * 0.035);
+      }
+
       html,
       body {
         margin: 0;
@@ -17,17 +27,63 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        font-family: "DIN Condensed", sans-serif;
+      }
+
+      .player {
+        position: relative;
+        width: var(--grid-size);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .brand {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        font-size: var(--brand-size);
+        letter-spacing: 0.02em;
+        line-height: 1;
+        color: #e6e6e6;
+        text-transform: uppercase;
+        pointer-events: none;
+      }
+
+      .brand-info {
+        position: relative;
+        pointer-events: auto;
+      }
+
+      .brand-info::after {
+        content: "INFO";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        text-align: right;
+        opacity: 0;
+      }
+
+      .brand-info:hover {
+        color: transparent;
+      }
+
+      .brand-info:hover::after {
+        opacity: 1;
+        color: #e6e6e6;
       }
 
       .grid {
-        width: 80vmin;
-        height: 80vmin;
+        width: 100%;
+        height: var(--grid-size);
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         grid-template-rows: repeat(4, 1fr);
       }
 
       .cell {
+        position: relative;
         background-position: center;
         background-size: cover;
         background-repeat: no-repeat;
@@ -38,32 +94,214 @@
         opacity: 0.5;
       }
 
+      .cell.active {
+        box-shadow: inset 0 0 20px 8px #fff;
+      }
+
+      .cell.next {
+        animation: nextPulse 1.6s ease-in-out infinite;
+      }
+
+      @keyframes nextPulse {
+        0%,
+        100% {
+          filter: brightness(1);
+        }
+        50% {
+          filter: brightness(1.8);
+        }
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .progress {
+        width: 100%;
+        height: 8px;
+        background: #5c5c5c;
+        opacity: 0;
+        transition: opacity 150ms linear;
+      }
+
+      .progress.is-visible {
+        opacity: 1;
+      }
+
+      .progress-fill {
+        width: 0%;
+        height: 100%;
+        background: #8d8d8d;
+      }
+
       @media (max-width: 768px) {
-        .grid {
-          width: 100vmin;
-          height: 100vmin;
+        :root {
+          --grid-size: 100vmin;
         }
       }
     </style>
   </head>
   <body>
-    <div class="grid">
-      <div class="cell" style="background-image: url('images/thumbnails/cover00.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover01.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover02.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover03.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover04.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover05.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover06.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover07.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover08.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover09.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover10.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover11.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover12.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover13.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover14.jpg')"></div>
-      <div class="cell" style="background-image: url('images/thumbnails/cover15.jpg')"></div>
+    <div class="player">
+      <div class="grid" id="grid">
+        <div class="cell" style="background-image: url('images/thumbnails/cover01.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover02.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover03.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover04.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover05.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover06.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover07.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover08.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover09.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover10.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover11.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover12.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover13.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover14.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover15.jpg')"></div>
+        <div class="cell" style="background-image: url('images/thumbnails/cover16.jpg')"></div>
+      </div>
+      <div class="progress" id="progress">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="brand">
+        <span>SPACEBARMAN</span>
+        <span class="brand-info">ACCIDENTAL</span>
+      </div>
     </div>
+
+    <script>
+      const playlist = [
+        "mp3/01-Past.mp3",
+        "mp3/02-Placebo.mp3",
+        "mp3/03-Visit.mp3",
+        "mp3/04-Urge.mp3",
+        "mp3/05-Release.mp3",
+        "mp3/06-Present.mp3",
+        "mp3/07-Transition.mp3",
+        "mp3/08-Lust.mp3",
+        "mp3/09-TheWait.mp3",
+        "mp3/10-Doubt.mp3",
+        "mp3/11-Rumination.mp3",
+        "mp3/12-FalseFriends.mp3",
+        "mp3/13-MovingOn.mp3",
+        "mp3/14-Future.mp3",
+        "mp3/15-Latent.mp3",
+        "mp3/16-StoryTime.mp3",
+      ];
+
+      const audio = new Audio();
+      audio.preload = "metadata";
+
+      const cells = Array.from(document.querySelectorAll(".cell"));
+      const progress = document.getElementById("progress");
+      const progressFill = document.getElementById("progressFill");
+
+      let hasStarted = false;
+      let activeIndex = 0;
+      let activeCell = null;
+      let nextCell = null;
+
+      function showUi() {
+        if (!hasStarted) {
+          progress.classList.add("is-visible");
+          hasStarted = true;
+        }
+      }
+
+      function setActiveCell(index) {
+        if (activeCell) {
+          activeCell.classList.remove("active");
+        }
+
+        activeCell = cells[index];
+        activeCell.classList.add("active");
+      }
+
+      function clearNextCell() {
+        if (nextCell) {
+          nextCell.classList.remove("next");
+          nextCell = null;
+        }
+      }
+
+      function setNextCell(index) {
+        clearNextCell();
+        nextCell = cells[index];
+        nextCell.classList.add("next");
+      }
+
+      function getRandomNextIndex() {
+        if (playlist.length <= 1) {
+          return activeIndex;
+        }
+
+        let nextIndex = activeIndex;
+        while (nextIndex === activeIndex) {
+          nextIndex = Math.floor(Math.random() * playlist.length);
+        }
+
+        return nextIndex;
+      }
+
+      function playTrack(index) {
+        activeIndex = index;
+        setActiveCell(index);
+        clearNextCell();
+        progressFill.style.width = "0%";
+        audio.src = playlist[index];
+        audio.currentTime = 0;
+        audio.play();
+        showUi();
+          setNextCell(getRandomNextIndex());
+      }
+
+      cells.forEach((cell, index) => {
+        cell.addEventListener("click", () => {
+          if (hasStarted && index === activeIndex) {
+            if (audio.paused) {
+              audio.play();
+            } else {
+              audio.pause();
+            }
+            return;
+          }
+
+          playTrack(index);
+        });
+      });
+
+      audio.addEventListener("timeupdate", () => {
+        if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
+          progressFill.style.width = "0%";
+          return;
+        }
+
+        const progressValue = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = `${progressValue}%`;
+      });
+
+      audio.addEventListener("ended", () => {
+        const nextIndex = getRandomNextIndex();
+        playTrack(nextIndex);
+      });
+
+      audio.addEventListener("play", () => {
+        if (activeCell) {
+          activeCell.classList.add("active");
+        }
+        progress.classList.add("is-visible");
+        setNextCell(getRandomNextIndex());
+      });
+
+      audio.addEventListener("pause", () => {
+        if (activeCell) {
+          activeCell.classList.remove("active");
+        }
+        progress.classList.remove("is-visible");
+        clearNextCell();
+      });
+
+    </script>
   </body>
 </html>

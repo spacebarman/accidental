@@ -512,8 +512,6 @@
           const img = activeCell.querySelector('.cell-image');
           if (img) img.style.transform = 'scale(1) rotate(0deg)';
         }
-        queue = generateShuffledQueue(index);
-        queueIndex = 0;
         activeIndex = index;
         setActiveCell(index);
         clearNextCell();
@@ -526,8 +524,8 @@
         audio.currentTime = 0;
         audio.play();
         showUi();
-        if (queue.length > 1) {
-          setNextCell(queue[1]);
+        if (queue.length > queueIndex + 1) {
+          setNextCell(queue[queueIndex + 1]);
         }
         updateCoverArt(index);
       }
@@ -543,6 +541,8 @@
             return;
           }
 
+          queue = generateShuffledQueue(index);
+          queueIndex = 0;
           playTrack(index);
         });
       });

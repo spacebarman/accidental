@@ -300,6 +300,32 @@
           font-size: calc(var(--grid-size) * 0.03);
         }
       }
+
+      @media (max-width: 768px) and (orientation: landscape) {
+        :root {
+          --grid-size: 80vmin;
+        }
+
+        body {
+          overflow-y: hidden;
+          align-items: flex-start;
+          justify-content: center;
+          padding-top: calc(min(100vw, 100vh) * 0.025);
+        }
+
+        .brand {
+          font-size: calc(var(--brand-size) * 1.5);
+        }
+
+        .view-toggle {
+          font-size: calc(var(--brand-size) * 1.5);
+        }
+
+        .info-dialog {
+          font-size: calc(var(--grid-size) * 0.03);
+        }
+
+      }
     </style>
   </head>
   <body>

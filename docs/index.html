@@ -52,6 +52,7 @@
         line-height: 1;
         color: #666666;
         text-transform: uppercase;
+        position: relative;
       }
 
       .view-toggle {
@@ -68,6 +69,9 @@
         transition: color 150ms linear;
         display: flex;
         align-items: center;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
       }
 
       .view-toggle img {
@@ -235,14 +239,10 @@
       }
 
       .info-close {
-        position: absolute;
-        top: 3%;
-        right: 3%;
-        margin-right: 2%;
         background: #222222;
         border: 1px solid #666666;
         color: #666666;
-        padding: 0.5em 1em;
+        padding: 0.55em 1em;
         cursor: pointer;
         font-family: "BarlowCondensed", sans-serif;
         font-size: 1em;
@@ -250,11 +250,47 @@
         letter-spacing: 0.05em;
         transition: all 150ms linear;
         z-index: 1;
+        margin-right: 1em;
       }
 
       .info-close:hover {
         background: #666666;
         color: #000000;
+      }
+
+      .info-controls {
+        position: absolute;
+        top: 3%;
+        right: 3%;
+        display: flex;
+        gap: 1em;
+        align-items: center;
+        z-index: 2;
+      }
+
+      .language-selector {
+        background: #222222;
+        border: 1px solid #666666;
+        color: #666666;
+        padding: 0.5em 0.8em;
+        cursor: pointer;
+        font-family: "BarlowCondensed", sans-serif;
+        font-size: 1em;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        transition: all 150ms linear;
+        box-sizing: border-box;
+        margin: 0;
+      }
+
+      .language-selector:hover {
+        background: #666666;
+        color: #000000;
+      }
+
+      .language-selector option {
+        background: #222222;
+        color: #666666;
       }
 
       .cover-view {
@@ -350,33 +386,16 @@
         <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb16.jpg')"></div></div>
       </div>
       <div class="info-dialog" id="infoDialog">
-        <button class="info-close" id="infoClose">Close</button>
+        <div class="info-controls">
+          <select id="languageSelector" class="language-selector">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+            <option value="ca">Català</option>
+          </select>
+          <button class="info-close" id="infoClose">Close</button>
+        </div>
         <div class="info-scroll-wrapper">
-          <div class="info-content">
-          <h3>INSTRUCTIONS</h3>
-        <p>
-          Just click anywhere! Songs will play in random order. Currently playing song will be highlighted, while the next one will blink.
-        </p>
-        <h3>ABOUT THIS ALBUM</h3>
-        <p>
-          In a time where everything seems to revolve around chatting with AI machines, this album of small instrumentals is an attempt to convey meaning without words*. Its songs were indeed the result of a conversation, but in this case with a few guitar pedals**. A conversation made of knob positions, footswitch pressing, guitar riffs, listening, and pondering. To align with this wordless dialog, songs don’t have individual names, they are only numbered for the sake of referencing the resulting audio files.
-        </p>
-        <p>
-          The album was recorded through a few meditative sessions between November and October of 2025. In those sessions, I prioritised spontaneity, making an effort to contain my “producer” self to intervene and polish, and instead allowing exploration and surprise to come through. In some cases, however, the explorer in me wanted to add a bit extra structure, and that was ok.
-        </p>
-        <p>
-          Melodies, harmonies or rhythmical patterns were spontaneous responses inspired by accidental noises and sound textures. I captured those textures from multiple sources: unexpected electrical noises***, degraded drones, or loops downtuned beyond recognition. I then acted as an interlocutor, evaluating those abstract sound prompts and replying with musical passages on top, around, or despite them. The result was a bunch of happy accidents.
-        </p>
-        <p>
-          The album is also an appreciation of texture in both sound and visual form.  The artworks are abstract photographs I’ve took in the last few years, macro captures of small worlds or surprising textures from simple everyday things. I hope you enjoy the images as much as the music.
-        </p>
-        <h3>NOTES</h3>
-        <p>
-          * Almost. The album has a title, after all. Also this info text is the most I’ve ever written about one of my musical works.<br/>
-          ** For the guitar geeks, I used almost exclusively <a href="https://www.chasebliss.com/lost-and-found" target="_blank">ChaseBliss' Lost+Found</a>, <a href="https://empresseffects.com/products/zoia" target="_blank">Empress Effects' Zoia</a> and <a href="https://line6.com/hx-stomp/" target="_blank">Line6 HX Stomp</a>. L+F was my my master texture generator. With the Zoia, I programmed a very interactive stereo looper that allowed me to mangle loops and the live signal separately. I used the HX Stomp only for amp+cab simulation. Oh, I also used <a href="https://banananaeffects.com/products/abracadabra" target="_blank">Banana's Abracadabra</a> in one song. Can you guess which one?<br/>
-          *** If I leave my pedalboard alone, it produces some ghostly bell-like sounds at random intervals. They’re beautiful.
-        </p>
-
+          <div class="info-content" id="infoContent">
           </div>
         </div>
       </div>
@@ -412,8 +431,69 @@
         "mp3/Spacebarman-Accidental-Song16.mp3",
       ];
 
+      const translations = {
+        en: {
+          closeBtn: "Close",
+          instructions: "INSTRUCTIONS",
+          instructionsText: "Just click anywhere! Songs will play in random order. Currently playing song will be highlighted, while the next one will blink.",
+          aboutAlbum: "ABOUT THIS ALBUM",
+          aboutAlbumP1: "In a time where everything seems to revolve around chatting with AI machines, this album of small instrumentals is an attempt to convey meaning without words*. Its songs were indeed the result of a conversation, but in this case with a few guitar pedals**. A conversation made of knob positions, footswitch pressing, guitar riffs, listening, and pondering. To align with this wordless dialog, songs don't have individual names, they are only numbered for the sake of referencing the resulting audio files.",
+          aboutAlbumP2: "The album was recorded through a few meditative sessions between November and October of 2025. In those sessions, I prioritised spontaneity, making an effort to contain my \"producer\" self to intervene and polish, and instead allowing exploration and surprise to come through. In some cases, however, the explorer in me wanted to add a bit extra structure, and that was ok.",
+          aboutAlbumP3: "Melodies, harmonies or rhythmical patterns were spontaneous responses inspired by accidental noises and sound textures. I captured those textures from multiple sources: unexpected electrical noises***, degraded drones, or loops downtuned beyond recognition. I then acted as an interlocutor, evaluating those abstract sound prompts and replying with musical passages on top, around, or despite them. The result was a bunch of happy accidents.",
+          aboutAlbumP4: "The album is also an appreciation of texture in both sound and visual form. The artworks are abstract photographs I've took in the last few years, macro captures of small worlds or surprising textures from simple everyday things. I hope you enjoy the images as much as the music.",
+          notes: "NOTES",
+          notesText: "* Almost. The album has a title, after all. Also this info text is the most I've ever written about one of my musical works.<br/>** For the guitar geeks, I used almost exclusively <a href=\"https://www.chasebliss.com/lost-and-found\" target=\"_blank\">ChaseBliss' Lost+Found</a>, <a href=\"https://empresseffects.com/products/zoia\" target=\"_blank\">Empress Effects' Zoia</a> and <a href=\"https://line6.com/hx-stomp/\" target=\"_blank\">Line6 HX Stomp</a>. L+F was my master texture generator. With the Zoia, I programmed a very interactive stereo looper that allowed me to mangle loops and the live signal separately. I used the HX Stomp only for amp+cab simulation. Oh, I also used <a href=\"https://banananaeffects.com/products/abracadabra\" target=\"_blank\">Banana's Abracadabra</a> in one song. Can you guess which one?<br/>*** If I leave my pedalboard alone, it produces some ghostly bell-like sounds at random intervals. They're beautiful."
+        },
+        es: {
+          closeBtn: "Cerrar",
+          instructions: "INSTRUCCIONES",
+          instructionsText: "¡Solo haz clic en cualquier lugar! Las canciones se reproducirán en orden aleatorio. La canción que se está reproduciendo actualmente será resaltada, mientras que la siguiente parpadeará.",
+          aboutAlbum: "ACERCA DE ESTE ÁLBUM",
+          aboutAlbumP1: "En una época en la que todo parece girar en torno a charlar con máquinas de IA, este álbum de pequeñas canciones instrumentales es un intento de transmitir significado sin palabras*. Sus canciones fueron en efecto el resultado de una conversación, pero en este caso con algunos pedales de guitarra**. Una conversación hecha de posiciones de botones, presión de pedales, riffs de guitarra, escucha y reflexión. Para alinear este diálogo sin palabras, las canciones no tienen nombres individuales, solo están numeradas para facilitar la referencia de los archivos de audio resultantes.",
+          aboutAlbumP2: "El álbum fue grabado a través de algunas sesiones meditativas entre noviembre y octubre de 2025. En esas sesiones, prioricé la espontaneidad, haciendo un esfuerzo por contener mi yo \"productor\" para intervenir y pulir, y en su lugar permitiendo que la exploración y la sorpresa salieran a la luz. Sin embargo, en algunos casos, el explorador en mí quería agregar un poco de estructura extra, y eso estaba bien.",
+          aboutAlbumP3: "Las melodías, armonías o patrones rítmicos fueron respuestas espontáneas inspiradas en ruidos accidentales y texturas sonoras. Capturé esas texturas de múltiples fuentes: ruidos eléctricos inesperados***, drones degradados o loops desafinados más allá del reconocimiento. Luego actué como un interlocutor, evaluando esos sonidos abstractos y respondiendo con pasajes musicales encima, alrededor o a pesar de ellos. El resultado fue un montón de accidentes felices.",
+          aboutAlbumP4: "El álbum es también una apreciación de la textura tanto en forma sonora como visual. Las obras de arte son fotografías abstractas que he tomado en los últimos años, capturas macro de pequeños mundos o texturas sorprendentes de cosas cotidianas simples. Espero que disfrutes tanto de las imágenes como de la música.",
+          notes: "NOTAS",
+          notesText: "* Casi. El álbum tiene un título, después de todo. Además, este texto de información es lo más que he escrito sobre uno de mis trabajos musicales.<br/>** Para los aficionados a la guitarra, utilicé casi exclusivamente <a href=\"https://www.chasebliss.com/lost-and-found\" target=\"_blank\">ChaseBliss' Lost+Found</a>, <a href=\"https://empresseffects.com/products/zoia\" target=\"_blank\">Empress Effects' Zoia</a> y <a href=\"https://line6.com/hx-stomp/\" target=\"_blank\">Line6 HX Stomp</a>. L+F fue mi generador de texturas maestro. Con la Zoia, programé un looper estéreo muy interactivo que me permitió manipular bucles y la señal en vivo por separado. Utilicé el HX Stomp solo para simulación de amplificador + gabinete. Oh, también usé <a href=\"https://banananaeffects.com/products/abracadabra\" target=\"_blank\">Banana's Abracadabra</a> en una canción. ¿Puedes adivinar cuál?<br/>*** Si dejo mi placa de pedales sola, produce algunos sonidos de campanas fantasmales a intervalos aleatorios. Son hermosos."
+        },
+        ca: {
+          closeBtn: "Tancar",
+          instructions: "INSTRUCCIONS",
+          instructionsText: "Només fes clic a qualsevol lloc! Les cançons es reproduiran en ordre aleatori. La cançó que s'està reproduint actualment serà ressaltada, mentre que la següent parpellejarà.",
+          aboutAlbum: "SOBRE AQUEST ÀLBUM",
+          aboutAlbumP1: "En una època en què tot sembla girar al voltant de xerrar amb màquines d'IA, aquest àlbum de petits cancions instrumentals és un intent de transmetre significat sense paraules*. Les seves cançons van ser en efecte el resultat d'una conversa, però en aquest cas amb alguns pedals de guitarra**. Una conversa feta de posicions de botons, pressió de pedals, riffs de guitarra, escolta i reflexió. Per alinear aquest diàleg sense paraules, les cançons no tenen noms individuals, només estan numerades per facilitar la referència dels arxius d'àudio resultants.",
+          aboutAlbumP2: "L'àlbum va ser gravat a través de diverses sessions meditatives entre novembre i octubre de 2025. En aquestes sessions, vaig prioritzar l'espontaneïtat, fent un esforç per contenir el meu jo \"productor\" per intervenir i polir, i en lloc d'això permetre que l'exploració i la sorpresa sortissin a la llum. Tanmateix, en alguns casos, l'explorador dins meu volia afegir una mica d'estructura extra, i això estava bé.",
+          aboutAlbumP3: "Les melodies, harmonies o patrons rítmics van ser respostes espontànies inspirades en sorolls accidentals i textures sonores. Vaig capturar aquestes textures de múltiples fonts: sorolls elèctrics inesperats***, drones degradats o loops desafinats més enllà del reconeixement. Llavors vaig actuar com a interlocutor, avaluant aquests sons abstractes i responent amb passatges musicals a sobre, al voltant o malgrat d'ells. El resultat va ser un grapat d'accidents feliços.",
+          aboutAlbumP4: "L'àlbum és també una apreciació de la textura tant en forma sonora com visual. Les obres d'art són fotografies abstractes que he pres en els últims anys, captures macro de petit mons o textures sorprenents de coses quotidianes simples. Espero que gaudiu tant de les imatges com de la música.",
+          notes: "NOTES",
+          notesText: "* Gairebé. L'àlbum té un títol, després de tot. A més, aquest text informatiu és el més que he escrit sobre una de les meves obres musicals.<br/>** Per als aficionats a la guitarra, vaig utilitzar gairebé exclusivament <a href=\"https://www.chasebliss.com/lost-and-found\" target=\"_blank\">ChaseBliss' Lost+Found</a>, <a href=\"https://empresseffects.com/products/zoia\" target=\"_blank\">Empress Effects' Zoia</a> i <a href=\"https://line6.com/hx-stomp/\" target=\"_blank\">Line6 HX Stomp</a>. L+F va ser el meu generador de textures mestre. Amb la Zoia, vaig programar un looper estèreo molt interactiu que em va permetre manipular bucles i el senyal en viu per separat. Vaig utilitzar el HX Stomp només per a la simulació d'amplificador + gabinet. Ah, també vaig utilitzar <a href=\"https://banananaeffects.com/products/abracadabra\" target=\"_blank\">Banana's Abracadabra</a> en una cançó. Pots endevinar quina?<br/>*** Si deixo la meva placa de pedals sola, produeix alguns sons de campanes fantasmagues a intervals aleatoris. Són preciosos."
+        }
+      };
+
+      let currentLanguage = "en";
+
+      function renderInfoContent() {
+        const t = translations[currentLanguage];
+        const infoContent = document.getElementById('infoContent');
+        infoContent.innerHTML = `
+          <h3>${t.instructions}</h3>
+          <p>${t.instructionsText}</p>
+          <h3>${t.aboutAlbum}</h3>
+          <p>${t.aboutAlbumP1}</p>
+          <p>${t.aboutAlbumP2}</p>
+          <p>${t.aboutAlbumP3}</p>
+          <p>${t.aboutAlbumP4}</p>
+          <h3>${t.notes}</h3>
+          <p>${t.notesText}</p>
+        `;
+      }
+
+      function updateCloseButtonText() {
+        const closeBtn = document.getElementById('infoClose');
+        closeBtn.textContent = translations[currentLanguage].closeBtn;
+      }
+
       const audio = new Audio();
-      audio.preload = "metadata";
 
       const cells = Array.from(document.querySelectorAll(".cell"));
       const progress = document.getElementById("progress");
@@ -614,6 +694,27 @@
       infoClose.addEventListener('click', () => {
         infoDialog.classList.remove('visible');
       });
+
+      // Language selector
+      const languageSelector = document.getElementById('languageSelector');
+      
+      // Load saved language from localStorage
+      const savedLanguage = localStorage.getItem('accidental-language');
+      if (savedLanguage && translations[savedLanguage]) {
+        currentLanguage = savedLanguage;
+        languageSelector.value = savedLanguage;
+      }
+      
+      languageSelector.addEventListener('change', (e) => {
+        currentLanguage = e.target.value;
+        localStorage.setItem('accidental-language', currentLanguage);
+        renderInfoContent();
+        updateCloseButtonText();
+      });
+
+      // Initialize info content
+      renderInfoContent();
+      updateCloseButtonText();
 
       viewToggle.addEventListener('click', toggleViewMode);
 

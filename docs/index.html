@@ -8,11 +8,13 @@
       rel="stylesheet"
       type="text/css"
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Raleway:wght@900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
     <title>Accidental</title>
     <style>
+      @font-face {
+        font-family: 'Rubik';
+        src: url('fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+        font-weight: 100 900;
+      }
       :root {
         --grid-size: 80vmin;
         --brand-size: calc(var(--grid-size) * 0.035);
@@ -45,17 +47,45 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
+        padding-top: calc(var(--brand-size) * 0.1);
         font-size: var(--brand-size);
         letter-spacing: 0.02em;
         line-height: 1;
         color: #666666;
         text-transform: uppercase;
-        pointer-events: none;
+      }
+
+      .view-toggle {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+        color: #666666;
+        font-family: "DIN Condensed", sans-serif;
+        font-size: var(--brand-size);
+        letter-spacing: 0.02em;
+        line-height: 1;
+        transition: color 150ms linear;
+        display: flex;
+        align-items: center;
+      }
+
+      .view-toggle img {
+        height: 0.8em;
+        width: auto;
+        opacity: 0.7;
+        transition: opacity 150ms linear;
+      }
+
+      .view-toggle:hover img {
+        opacity: 1;
       }
 
       .brand-info {
         position: relative;
         pointer-events: auto;
+        cursor: pointer;
       }
 
       .brand-info::after {
@@ -164,6 +194,19 @@
         background: #adadad;
       }
 
+      a {
+        color: #eeeeee;
+      }
+
+      .brand a {
+        color: #666666;
+        text-decoration: none;
+      }
+
+      .brand a:hover {
+        color: #bbbbbb;
+      }
+
       .info-dialog {
         position: absolute;
         top: 0;
@@ -176,9 +219,8 @@
         display: none;
         padding: 3%;
         box-sizing: border-box;
-        overflow-y: auto;
         font-family: 'Rubik', sans-serif;
-        font-size: calc(var(--grid-size) * 0.02);
+        font-size: calc(var(--grid-size) * 0.025);
         line-height: 1.6;
       }
 
@@ -186,11 +228,19 @@
         display: block;
       }
 
+      .info-scroll-wrapper {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        padding-right: 2%;
+      }
+
       .info-close {
         position: absolute;
         top: 3%;
         right: 3%;
-        background: transparent;
+        margin-right: 2%;
+        background: #222222;
         border: 1px solid #666666;
         color: #666666;
         padding: 0.5em 1em;
@@ -200,6 +250,7 @@
         text-transform: uppercase;
         letter-spacing: 0.05em;
         transition: all 150ms linear;
+        z-index: 1;
       }
 
       .info-close:hover {
@@ -207,19 +258,39 @@
         color: #000000;
       }
 
-      .info-content {
-        margin-top: 10%;
+      .cover-view {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: var(--grid-size);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        display: none;
+        z-index: 5;
+        cursor: pointer;
+        overflow: hidden;
+      }
+
+      .cover-view.visible {
+        display: block;
       }
 
       @media (max-width: 768px) {
         :root {
-          --grid-size: 100vmin;
+          --grid-size: 95vmin;
+        }
+
+        .info-dialog {
+          font-size: calc(var(--grid-size) * 0.03);
         }
       }
     </style>
   </head>
   <body>
     <div class="player">
+      <div class="cover-view" id="coverView"></div>
       <div class="grid" id="grid">
         <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb01.jpg')"></div></div>
         <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb02.jpg')"></div></div>
@@ -240,14 +311,15 @@
       </div>
       <div class="info-dialog" id="infoDialog">
         <button class="info-close" id="infoClose">Close</button>
-        <div class="info-content">
+        <div class="info-scroll-wrapper">
+          <div class="info-content">
           <h3>INSTRUCTIONS</h3>
         <p>
           Just click anywhere! Songs will play in random order. Currently playing song will be highlighted, while the next one will blink.
         </p>
         <h3>ABOUT THIS ALBUM</h3>
         <p>
-          In a time where everything is about chatting with AI machines, this album of small instrumentals is an attempt to convey meaning without words*. Its songs were indeed the result of a conversation, but in this case with a few guitar pedals**. A conversation made of knob positions, footswitch pressing, guitar riffs, listening, and pondering. To align with this wordless dialog, songs don’t have individual names, they are only numbered for the sake of referencing the resulting audio files.
+          In a time where everything seems to revolve around chatting with AI machines, this album of small instrumentals is an attempt to convey meaning without words*. Its songs were indeed the result of a conversation, but in this case with a few guitar pedals**. A conversation made of knob positions, footswitch pressing, guitar riffs, listening, and pondering. To align with this wordless dialog, songs don’t have individual names, they are only numbered for the sake of referencing the resulting audio files.
         </p>
         <p>
           The album was recorded through a few meditative sessions between November and October of 2025. In those sessions, I prioritised spontaneity, making an effort to contain my “producer” self to intervene and polish, and instead allowing exploration and surprise to come through. In some cases, however, the explorer in me wanted to add a bit extra structure, and that was ok.
@@ -260,18 +332,22 @@
         </p>
         <h3>NOTES</h3>
         <p>
-          * Almost. The album is titled Accidents, after all.<br/>
-          ** For the guitar geeks, I used almost exclusively ChaseBliss’ Lost+Found, Empress Effects’ Zoia and Line6 HX Stomp. L+F was my my master texture generator. I programmed a very interactive stereo looper that allowed me to mangle loops separately from the live signal. I only used the HX Stomp for amp+cab simulation. Oh, I also used Banana’s Abracadabra in one song. Can you guess which one?<br/>
+          * Almost. The album has a title, after all. Also this info text is the most I’ve ever written about one of my musical works.<br/>
+          ** For the guitar geeks, I used almost exclusively <a href="https://www.chasebliss.com/lost-and-found" target="_blank">ChaseBliss' Lost+Found</a>, <a href="https://empresseffects.com/products/zoia" target="_blank">Empress Effects' Zoia</a> and <a href="https://line6.com/hx-stomp/" target="_blank">Line6 HX Stomp</a>. L+F was my my master texture generator. With the Zoia, I programmed a very interactive stereo looper that allowed me to mangle loops and the live signal separately. I used the HX Stomp only for amp+cab simulation. Oh, I also used <a href="https://banananaeffects.com/products/abracadabra" target="_blank">Banana's Abracadabra</a> in one song. Can you guess which one?<br/>
           *** If I leave my pedalboard alone, it produces some ghostly bell-like sounds at random intervals. They’re beautiful.
         </p>
 
+          </div>
         </div>
       </div>
       <div class="progress" id="progress">
         <div class="progress-fill" id="progressFill"></div>
       </div>
       <div class="brand">
-        <span>SPACEBARMAN</span>
+        <a href="https://www.spacebarman.com" target="_blank">SPACEBARMAN</a>
+        <button class="view-toggle" id="viewToggle">
+          <img src="images/icon-cover.svg" alt="Toggle view" width="16" height="16">
+        </button>
         <span class="brand-info">ACCIDENTAL</span>
       </div>
     </div>
@@ -303,11 +379,50 @@
       const progress = document.getElementById("progress");
       const progressFill = document.getElementById("progressFill");
 
+      // Cover view functionality - declare early to avoid initialization errors
+      const coverView = document.getElementById('coverView');
+      const viewToggle = document.getElementById('viewToggle');
+      const viewToggleImg = viewToggle.querySelector('img');
+      let coverViewActive = false;
+
+      function updateCoverArt(index) {
+        const coverPath = `images/coverarts/Spacebarman-Accidents-coverart${(index + 1).toString().padStart(2, '0')}.jpg`;
+        coverView.style.backgroundImage = `url('${coverPath}')`;
+      }
+
+      function toggleViewMode() {
+        coverViewActive = !coverViewActive;
+        coverView.classList.toggle('visible');
+        viewToggleImg.src = coverViewActive ? 'images/icon-grid.svg' : 'images/icon-cover.svg';
+        if (coverViewActive && audio.src) {
+          updateCoverArt(activeIndex);
+        }
+      }
+
       let hasStarted = false;
       let activeIndex = 0;
       let activeCell = null;
       let nextCell = null;
       let nextIndex = 0;
+      let queue = [];
+      let queueIndex = 0;
+
+      function generateShuffledQueue(firstIndex) {
+        const shuffled = [];
+        const remaining = [];
+        for (let i = 0; i < playlist.length; i++) {
+          if (i !== firstIndex) {
+            remaining.push(i);
+          }
+        }
+        for (let i = remaining.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+        }
+        shuffled.push(firstIndex);
+        shuffled.push(...remaining);
+        return shuffled;
+      }
 
       function showUi() {
         if (!hasStarted) {
@@ -357,6 +472,8 @@
           const img = activeCell.querySelector('.cell-image');
           if (img) img.style.transform = 'scale(1) rotate(0deg)';
         }
+        queue = generateShuffledQueue(index);
+        queueIndex = 0;
         activeIndex = index;
         setActiveCell(index);
         clearNextCell();
@@ -369,7 +486,10 @@
         audio.currentTime = 0;
         audio.play();
         showUi();
-          setNextCell(getRandomNextIndex());
+        if (queue.length > 1) {
+          setNextCell(queue[1]);
+        }
+        updateCoverArt(index);
       }
 
       cells.forEach((cell, index) => {
@@ -407,7 +527,12 @@
       });
 
       audio.addEventListener("ended", () => {
-        playTrack(nextIndex);
+        queueIndex++;
+        if (queueIndex >= queue.length) {
+          queueIndex = 0;
+          queue = generateShuffledQueue(queue[0]);
+        }
+        playTrack(queue[queueIndex]);
       });
 
       audio.addEventListener("play", () => {
@@ -415,8 +540,9 @@
           activeCell.classList.add("active");
         }
         progress.classList.add("is-visible");
-        const randNextIndex = getRandomNextIndex();
-        setNextCell(randNextIndex);
+        if (queue.length > queueIndex + 1) {
+          setNextCell(queue[queueIndex + 1]);
+        }
       });
 
       audio.addEventListener("pause", () => {
@@ -427,9 +553,14 @@
         clearNextCell();
       });
 
-      // Initialize with a random "next" tile on page load
-      const initialNextIndex = Math.floor(Math.random() * playlist.length);
-      setNextCell(initialNextIndex);
+      // Initialize with a shuffled queue on page load
+      const initialFirstIndex = Math.floor(Math.random() * playlist.length);
+      queue = generateShuffledQueue(initialFirstIndex);
+      queueIndex = 0;
+      if (queue.length > 1) {
+        setNextCell(queue[1]);
+        updateCoverArt(queue[1]);
+      }
 
       // Info dialog functionality
       const infoDialog = document.getElementById('infoDialog');
@@ -437,11 +568,48 @@
       const brandInfo = document.querySelector('.brand-info');
 
       brandInfo.addEventListener('click', () => {
-        infoDialog.classList.add('visible');
+        infoDialog.classList.toggle('visible');
       });
 
       infoClose.addEventListener('click', () => {
         infoDialog.classList.remove('visible');
+      });
+
+      viewToggle.addEventListener('click', toggleViewMode);
+
+      coverView.addEventListener('click', () => {
+        if (audio.paused) {
+          audio.play();
+        } else {
+          audio.pause();
+        }
+      });
+
+      // Keyboard interaction
+      document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          if (!audio.src) {
+            playTrack(nextIndex);
+          } else if (audio.paused) {
+            audio.play();
+          } else {
+            audio.pause();
+          }
+        } else if (e.key === 'Escape') {
+          infoDialog.classList.remove('visible');
+        } else if (e.key === 'i' || e.key === 'I') {
+          infoDialog.classList.toggle('visible');
+        } else if (e.key === 'c' || e.key === 'C') {
+          toggleViewMode();
+        } else if (e.key === 'n' || e.key === 'N') {
+          queueIndex++;
+          if (queueIndex >= queue.length) {
+            queueIndex = 0;
+            queue = generateShuffledQueue(queue[0]);
+          }
+          playTrack(queue[queueIndex]);
+        }
       });
 
     </script>

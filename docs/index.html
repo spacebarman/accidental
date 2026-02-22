@@ -3,13 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      href="https://db.onlinewebfonts.com/c/954a505bdd1fd46577f8b93badf61c8c?family=DIN+Condensed"
-      rel="stylesheet"
-      type="text/css"
-    />
     <title>Accidental</title>
     <style>
+      @font-face {
+        font-family: 'BarlowCondensed';
+        src: url('fonts/BarlowCondensed-Medium.ttf') format('truetype');
+      }
       @font-face {
         font-family: 'Rubik';
         src: url('fonts/Rubik-VariableFont_wght.ttf') format('truetype');
@@ -32,7 +31,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: "DIN Condensed", sans-serif;
+        font-family: "BarlowCondensed", sans-serif;
       }
 
       .player {
@@ -62,7 +61,7 @@
         padding: 0;
         margin: 0;
         color: #666666;
-        font-family: "DIN Condensed", sans-serif;
+        font-family: "BarlowCondensed", sans-serif;
         font-size: var(--brand-size);
         letter-spacing: 0.02em;
         line-height: 1;
@@ -245,7 +244,7 @@
         color: #666666;
         padding: 0.5em 1em;
         cursor: pointer;
-        font-family: "DIN Condensed", sans-serif;
+        font-family: "BarlowCondensed", sans-serif;
         font-size: 1em;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -280,6 +279,21 @@
       @media (max-width: 768px) {
         :root {
           --grid-size: 95vmin;
+        }
+
+        body {
+          overflow-y: hidden;
+          align-items: flex-start;
+          justify-content: center;
+          padding-top: calc(min(100vw, 100vh) * 0.025);
+        }
+
+        .brand {
+          font-size: calc(var(--brand-size) * 1.5);
+        }
+
+        .view-toggle {
+          font-size: calc(var(--brand-size) * 1.5);
         }
 
         .info-dialog {

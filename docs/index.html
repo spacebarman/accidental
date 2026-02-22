@@ -8,6 +8,9 @@
       rel="stylesheet"
       type="text/css"
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Raleway:wght@900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
     <title>Accidental</title>
     <style>
       :root {
@@ -84,11 +87,21 @@
 
       .cell {
         position: relative;
+        overflow: hidden;
+        transition: opacity 150ms linear;
+        filter: brightness(0.7);
+      }
+
+      .cell-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
         background-position: center;
         background-size: cover;
         background-repeat: no-repeat;
-        transition: opacity 150ms linear;
-        filter: brightness(0.7);
+        transition: transform 100ms linear;
       }
 
       .cell:hover {
@@ -100,8 +113,19 @@
       }
 
       .cell.active {
-        box-shadow: inset 0 0 40px 20px #fff;
         filter: brightness(1);
+      }
+
+      .cell.active::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        box-shadow: inset 0 0 40px 20px #fff;
+        pointer-events: none;
+        z-index: 1;
       }
 
       .cell.next {
@@ -111,10 +135,10 @@
       @keyframes nextPulse {
         0%,
         100% {
-          filter: brightness(.8);
+          filter: brightness(.3);
         }
         50% {
-          filter: brightness(2.5);
+          filter: brightness(1.2);
         }
       }
 
@@ -140,6 +164,53 @@
         background: #adadad;
       }
 
+      .info-dialog {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: var(--grid-size);
+        background: #222222;
+        color: #bbbbbb;
+        z-index: 10;
+        display: none;
+        padding: 3%;
+        box-sizing: border-box;
+        overflow-y: auto;
+        font-family: 'Rubik', sans-serif;
+        font-size: calc(var(--grid-size) * 0.02);
+        line-height: 1.6;
+      }
+
+      .info-dialog.visible {
+        display: block;
+      }
+
+      .info-close {
+        position: absolute;
+        top: 3%;
+        right: 3%;
+        background: transparent;
+        border: 1px solid #666666;
+        color: #666666;
+        padding: 0.5em 1em;
+        cursor: pointer;
+        font-family: "DIN Condensed", sans-serif;
+        font-size: 1em;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        transition: all 150ms linear;
+      }
+
+      .info-close:hover {
+        background: #666666;
+        color: #000000;
+      }
+
+      .info-content {
+        margin-top: 10%;
+      }
+
       @media (max-width: 768px) {
         :root {
           --grid-size: 100vmin;
@@ -150,22 +221,51 @@
   <body>
     <div class="player">
       <div class="grid" id="grid">
-        <div class="cell" style="background-image: url('images/thumbnails/cover01.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover02.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover03.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover04.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover05.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover06.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover07.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover08.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover09.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover10.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover11.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover12.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover13.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover14.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover15.jpg')"></div>
-        <div class="cell" style="background-image: url('images/thumbnails/cover16.jpg')"></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb01.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb02.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb03.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb04.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb05.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb06.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb07.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb08.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb09.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb10.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb11.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb12.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb13.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb14.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb15.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidents-thumb16.jpg')"></div></div>
+      </div>
+      <div class="info-dialog" id="infoDialog">
+        <button class="info-close" id="infoClose">Close</button>
+        <div class="info-content">
+          <h3>INSTRUCTIONS</h3>
+        <p>
+          Just click anywhere! Songs will play in random order. Currently playing song will be highlighted, while the next one will blink.
+        </p>
+        <h3>ABOUT THIS ALBUM</h3>
+        <p>
+          In a time where everything is about chatting with AI machines, this album of small instrumentals is an attempt to convey meaning without words*. Its songs were indeed the result of a conversation, but in this case with a few guitar pedals**. A conversation made of knob positions, footswitch pressing, guitar riffs, listening, and pondering. To align with this wordless dialog, songs don’t have individual names, they are only numbered for the sake of referencing the resulting audio files.
+        </p>
+        <p>
+          The album was recorded through a few meditative sessions between November and October of 2025. In those sessions, I prioritised spontaneity, making an effort to contain my “producer” self to intervene and polish, and instead allowing exploration and surprise to come through. In some cases, however, the explorer in me wanted to add a bit extra structure, and that was ok.
+        </p>
+        <p>
+          Melodies, harmonies or rhythmical patterns were spontaneous responses inspired by accidental noises and sound textures. I captured those textures from multiple sources: unexpected electrical noises***, degraded drones, or loops downtuned beyond recognition. I then acted as an interlocutor, evaluating those abstract sound prompts and replying with musical passages on top, around, or despite them. The result was a bunch of happy accidents.
+        </p>
+        <p>
+          The album is also an appreciation of texture in both sound and visual form.  The artworks are abstract photographs I’ve took in the last few years, macro captures of small worlds or surprising textures from simple everyday things. I hope you enjoy the images as much as the music.
+        </p>
+        <h3>NOTES</h3>
+        <p>
+          * Almost. The album is titled Accidents, after all.<br/>
+          ** For the guitar geeks, I used almost exclusively ChaseBliss’ Lost+Found, Empress Effects’ Zoia and Line6 HX Stomp. L+F was my my master texture generator. I programmed a very interactive stereo looper that allowed me to mangle loops separately from the live signal. I only used the HX Stomp for amp+cab simulation. Oh, I also used Banana’s Abracadabra in one song. Can you guess which one?<br/>
+          *** If I leave my pedalboard alone, it produces some ghostly bell-like sounds at random intervals. They’re beautiful.
+        </p>
+
+        </div>
       </div>
       <div class="progress" id="progress">
         <div class="progress-fill" id="progressFill"></div>
@@ -178,22 +278,22 @@
 
     <script>
       const playlist = [
-        "mp3/01-Past.mp3",
-        "mp3/02-Placebo.mp3",
-        "mp3/03-Visit.mp3",
-        "mp3/04-Urge.mp3",
-        "mp3/05-Release.mp3",
-        "mp3/06-Present.mp3",
-        "mp3/07-Transition.mp3",
-        "mp3/08-Lust.mp3",
-        "mp3/09-TheWait.mp3",
-        "mp3/10-Doubt.mp3",
-        "mp3/11-Rumination.mp3",
-        "mp3/12-FalseFriends.mp3",
-        "mp3/13-MovingOn.mp3",
-        "mp3/14-Future.mp3",
-        "mp3/15-Latent.mp3",
-        "mp3/16-StoryTime.mp3",
+        "mp3/Spacebarman-Accidents-Song01.mp3",
+        "mp3/Spacebarman-Accidents-Song02.mp3",
+        "mp3/Spacebarman-Accidents-Song03.mp3",
+        "mp3/Spacebarman-Accidents-Song04.mp3",
+        "mp3/Spacebarman-Accidents-Song05.mp3",
+        "mp3/Spacebarman-Accidents-Song06.mp3",
+        "mp3/Spacebarman-Accidents-Song07.mp3",
+        "mp3/Spacebarman-Accidents-Song08.mp3",
+        "mp3/Spacebarman-Accidents-Song09.mp3",
+        "mp3/Spacebarman-Accidents-Song10.mp3",
+        "mp3/Spacebarman-Accidents-Song11.mp3",
+        "mp3/Spacebarman-Accidents-Song12.mp3",
+        "mp3/Spacebarman-Accidents-Song13.mp3",
+        "mp3/Spacebarman-Accidents-Song14.mp3",
+        "mp3/Spacebarman-Accidents-Song15.mp3",
+        "mp3/Spacebarman-Accidents-Song16.mp3",
       ];
 
       const audio = new Audio();
@@ -254,14 +354,16 @@
 
       function playTrack(index) {
         if (activeCell) {
-          activeCell.style.backgroundSize = "100% 100%";
+          const img = activeCell.querySelector('.cell-image');
+          if (img) img.style.transform = 'scale(1) rotate(0deg)';
         }
         activeIndex = index;
         setActiveCell(index);
         clearNextCell();
         progressFill.style.width = "0%";
         if (activeCell) {
-          activeCell.style.backgroundSize = "100% 100%";
+          const img = activeCell.querySelector('.cell-image');
+          if (img) img.style.transform = 'scale(1) rotate(0deg)';
         }
         audio.src = playlist[index];
         audio.currentTime = 0;
@@ -295,8 +397,12 @@
         progressFill.style.width = `${progressValue}%`;
 
         if (activeCell) {
-          const zoomLevel = 100 + (progressValue * 1);
-          activeCell.style.backgroundSize = `${zoomLevel}% ${zoomLevel}%`;
+          const scaleValue = 1 + (progressValue * 0.015);
+          const rotateValue = (progressValue / 100) * 45;
+          const img = activeCell.querySelector('.cell-image');
+          if (img) {
+            img.style.transform = `scale(${scaleValue}) rotate(${rotateValue}deg)`;
+          }
         }
       });
 
@@ -324,6 +430,19 @@
       // Initialize with a random "next" tile on page load
       const initialNextIndex = Math.floor(Math.random() * playlist.length);
       setNextCell(initialNextIndex);
+
+      // Info dialog functionality
+      const infoDialog = document.getElementById('infoDialog');
+      const infoClose = document.getElementById('infoClose');
+      const brandInfo = document.querySelector('.brand-info');
+
+      brandInfo.addEventListener('click', () => {
+        infoDialog.classList.add('visible');
+      });
+
+      infoClose.addEventListener('click', () => {
+        infoDialog.classList.remove('visible');
+      });
 
     </script>
   </body>

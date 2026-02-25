@@ -740,7 +740,9 @@
         if (e.code === 'Space') {
           e.preventDefault();
           if (!audio.src) {
-            playTrack(nextIndex);
+              queue = generateShuffledQueue(nextIndex);
+              queueIndex = 0;
+              playTrack(nextIndex);
           } else if (audio.paused) {
             audio.play();
           } else {

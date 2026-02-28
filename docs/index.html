@@ -441,24 +441,10 @@
     </div>
 
     <script>
-      const playlist = [
-        "mp3/Spacebarman-Accidental-Song01.mp3",
-        "mp3/Spacebarman-Accidental-Song02.mp3",
-        "mp3/Spacebarman-Accidental-Song03.mp3",
-        "mp3/Spacebarman-Accidental-Song04.mp3",
-        "mp3/Spacebarman-Accidental-Song05.mp3",
-        "mp3/Spacebarman-Accidental-Song06.mp3",
-        "mp3/Spacebarman-Accidental-Song07.mp3",
-        "mp3/Spacebarman-Accidental-Song08.mp3",
-        "mp3/Spacebarman-Accidental-Song09.mp3",
-        "mp3/Spacebarman-Accidental-Song10.mp3",
-        "mp3/Spacebarman-Accidental-Song11.mp3",
-        "mp3/Spacebarman-Accidental-Song12.mp3",
-        "mp3/Spacebarman-Accidental-Song13.mp3",
-        "mp3/Spacebarman-Accidental-Song14.mp3",
-        "mp3/Spacebarman-Accidental-Song15.mp3",
-        "mp3/Spacebarman-Accidental-Song16.mp3",
-      ];
+      // Playlist is base64-encoded JSON for obfuscation
+      const noise = "WyJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMDEubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzAyLm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcwMy5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMDQubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzA1Lm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcwNi5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMDcubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzA4Lm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcwOS5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMTAubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzExLm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcxMi5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMTMubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzE0Lm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcxNS5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMTYubXAzIl0=";
+
+      const silence = filter();
 
       const translations = {
         en: {
@@ -581,7 +567,7 @@
       function generateShuffledQueue(firstIndex) {
         const shuffled = [];
         const remaining = [];
-        for (let i = 0; i < playlist.length; i++) {
+        for (let i = 0; i < silence.length; i++) {
           if (i !== firstIndex) {
             remaining.push(i);
           }
@@ -626,13 +612,13 @@
       }
 
       function getRandomNextIndex() {
-        if (playlist.length <= 1) {
+        if (silence.length <= 1) {
           return activeIndex;
         }
 
         let nextIndex = activeIndex;
         while (nextIndex === activeIndex) {
-          nextIndex = Math.floor(Math.random() * playlist.length);
+          nextIndex = Math.floor(Math.random() * silence.length);
         }
 
         return nextIndex;
@@ -651,7 +637,7 @@
           const img = activeCell.querySelector('.cell-image');
           if (img) img.style.transform = 'scale(1) rotate(0deg)';
         }
-        audio.src = playlist[index];
+        audio.src = silence[index];
         audio.currentTime = 0;
         audio.play();
         showUi();
@@ -739,7 +725,7 @@
       });
 
       // Initialize with a shuffled queue on page load
-      const initialFirstIndex = Math.floor(Math.random() * playlist.length);
+      const initialFirstIndex = Math.floor(Math.random() * silence.length);
       queue = generateShuffledQueue(initialFirstIndex);
       queueIndex = 0;
       if (queue.length > 1) {
@@ -809,6 +795,7 @@
           audio.pause();
         }
       });
+      // If you ever need to log or display the decoded URL, use decodeTrack(playlist[index])
 
       // Keyboard interaction
       document.addEventListener('keydown', (e) => {
@@ -833,6 +820,18 @@
           playNextTrack();
         }
       });
+
+      function filter() {
+        try {
+          const decoded = atob(noise);
+          const arr = JSON.parse(decoded);
+          console.log('Decoded playlist:', arr);
+          return arr;
+        } catch (e) {
+          console.error('Playlist decode error:', e);
+          return [];
+        }
+      }
 
     </script>
   </body>

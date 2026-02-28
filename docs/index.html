@@ -86,8 +86,33 @@
         transition: opacity 150ms linear;
       }
 
+      .view-toggle svg {
+        height: 0.8em;
+        width: auto;
+        opacity: 0.7;
+        transition: opacity 150ms linear;
+      }
+
       .view-toggle:hover img {
         opacity: 1;
+      }
+
+      .view-toggle:hover svg {
+        opacity: 1;
+      }
+
+      .play-toggle {
+        font-size: var(--brand-size);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        padding: 0;
+      }
+
+      .play-toggle img {
+        height: 0.9em;
+        width: auto;
       }
       /*
       .brand-info {
@@ -168,7 +193,7 @@
       }
 
       .cell.next {
-        animation: nextPulse 1.6s ease-in-out infinite;
+        animation: nextPulse 2s ease-in-out infinite;
       }
 
       @keyframes nextPulse {
@@ -177,7 +202,7 @@
           filter: brightness(.3);
         }
         50% {
-          filter: brightness(1.2);
+          filter: brightness(1);
         }
       }
 
@@ -215,6 +240,13 @@
       .brand a:hover {
         color: #bbbbbb;
       }
+
+      #controls {
+        display: flex;
+        direction: row;
+        gap: .5em;
+        align-items: center;
+      } 
 
       .info-dialog {
         position: absolute;
@@ -410,11 +442,13 @@
       </div>
       <div class="brand">
         <div>
-          <a href="https://www.spacebarman.com" target="_blank"></a>
           <a href="#INFO" class="brand-info" title="INFO">SPACEBARMAN · ACCIDENTAL</a>
         </div>
 
         <div id="controls">
+          <button class="view-toggle play-toggle" id="playToggle" aria-pressed="false" aria-label="Play">
+            <img src="images/icon-play.svg" alt="Play" width="16" height="16">
+          </button>
           <button class="view-toggle" id="viewToggle">
             <img src="images/icon-cover.svg" alt="Toggle view" width="16" height="16">
           </button>
@@ -496,6 +530,7 @@
           <p>${t.aboutAlbumP4}</p>
           <h3>${t.notes}</h3>
           <p>${t.notesText}</p>
+          <p><a href="https://www.spacebarman.com" target="_blank" rel="noreferrer">www.spacebarman.com</a></p>
         `;
       }
 
@@ -514,7 +549,23 @@
       const coverView = document.getElementById('coverView');
       const viewToggle = document.getElementById('viewToggle');
       const viewToggleImg = viewToggle.querySelector('img');
+      const playToggle = document.getElementById('playToggle');
+      const playToggleImg = playToggle ? playToggle.querySelector('img') : null;
       let coverViewActive = false;
+
+      function updatePlayToggleIcon(isPlaying) {
+        if (!playToggle) {
+          return;
+        }
+        playToggle.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
+        playToggle.setAttribute('aria-pressed', isPlaying);
+        if (playToggleImg) {
+          playToggleImg.src = isPlaying ? 'images/icon-pause.svg' : 'images/icon-play.svg';
+          playToggleImg.alt = isPlaying ? 'Pause' : 'Play';
+        }
+      }
+
+      updatePlayToggleIcon(false);
 
       function updateCoverArt(index) {
         const coverPath = `images/coverarts/Spacebarman-Accidental-coverart${(index + 1).toString().padStart(2, '0')}.jpg`;
@@ -648,7 +699,7 @@
         progressFill.style.width = `${progressValue}%`;
 
         if (activeCell) {
-          const scaleValue = 1 + (progressValue * 0.02);
+          const scaleValue = 1 + (progressValue * 0.1);
           const rotateValue = (progressValue / 100) * 45;
           const img = activeCell.querySelector('.cell-image');
           if (img) {
@@ -674,6 +725,7 @@
         if (queue.length > queueIndex + 1) {
           setNextCell(queue[queueIndex + 1]);
         }
+        updatePlayToggleIcon(true);
       });
 
       audio.addEventListener("pause", () => {
@@ -682,6 +734,7 @@
         }
         progress.classList.remove("is-visible");
         clearNextCell();
+        updatePlayToggleIcon(false);
       });
 
       // Initialize with a shuffled queue on page load
@@ -728,6 +781,20 @@
       updateCloseButtonText();
 
       viewToggle.addEventListener('click', toggleViewMode);
+      playToggle.addEventListener('click', () => {
+        if (!audio.src) {
+          queue = generateShuffledQueue(nextIndex);
+          queueIndex = 0;
+          playTrack(nextIndex);
+          return;
+        }
+
+        if (audio.paused) {
+          audio.play();
+        } else {
+          audio.pause();
+        }
+      });
 
       coverView.addEventListener('click', () => {
         if (audio.paused) {

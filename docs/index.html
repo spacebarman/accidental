@@ -77,9 +77,6 @@
         transition: color 150ms linear;
         display: flex;
         align-items: center;
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
       }
 
       .view-toggle img {
@@ -92,7 +89,7 @@
       .view-toggle:hover img {
         opacity: 1;
       }
-
+      /*
       .brand-info {
         position: relative;
         pointer-events: auto;
@@ -108,16 +105,16 @@
         text-align: right;
         opacity: 0;
       }
-
+      
       .brand-info:hover {
         color: transparent;
       }
-
+      
       .brand-info:hover::after {
         opacity: 1;
         color: #bbbbbb;
       }
-
+      */
       .grid {
         width: 100%;
         height: var(--grid-size);
@@ -412,11 +409,16 @@
         <div class="progress-fill" id="progressFill"></div>
       </div>
       <div class="brand">
-        <a href="https://www.spacebarman.com" target="_blank">SPACEBARMAN</a>
-        <button class="view-toggle" id="viewToggle">
-          <img src="images/icon-cover.svg" alt="Toggle view" width="16" height="16">
-        </button>
-        <span class="brand-info">ACCIDENTAL</span>
+        <div>
+          <a href="https://www.spacebarman.com" target="_blank"></a>
+          <a href="#INFO" class="brand-info" title="INFO">SPACEBARMAN · ACCIDENTAL</a>
+        </div>
+
+        <div id="controls">
+          <button class="view-toggle" id="viewToggle">
+            <img src="images/icon-cover.svg" alt="Toggle view" width="16" height="16">
+          </button>
+        </div>
       </div>
     </div>
 

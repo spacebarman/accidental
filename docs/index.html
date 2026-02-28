@@ -131,6 +131,38 @@
         cursor: pointer;
       }
 
+      .play-flash-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.5s;
+      }
+
+      .play-flash-overlay.visible {
+        opacity: 1;
+        animation: play-flash-fade 3s forwards;
+      }
+
+      .play-flash-icon {
+        width: 50%;
+        height: 50%;
+        display: block;
+        filter: brightness(0);
+      }
+
+      @keyframes play-flash-fade {
+        0% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+
       .cell-image {
         position: absolute;
         top: 0;
@@ -382,22 +414,22 @@
     <div class="player">
       <div class="cover-view" id="coverView"></div>
       <div class="grid" id="grid">
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb01.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb02.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb03.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb04.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb05.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb06.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb07.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb08.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb09.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb10.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb11.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb12.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb13.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb14.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb15.jpg')"></div></div>
-        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb16.jpg')"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb01.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb02.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb03.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb04.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb05.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb06.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb07.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb08.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb09.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb10.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb11.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb12.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb13.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb14.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb15.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
+        <div class="cell"><div class="cell-image" style="background-image: url('images/thumbnails/Spacebarman-Accidental-thumb16.jpg')"></div><div class="play-flash-overlay"><img class="play-flash-icon" src="images/icon-play.svg" alt="Play"></div></div>
       </div>
       <div class="info-dialog" id="infoDialog">
         <div class="info-controls">
@@ -645,6 +677,19 @@
           setNextCell(queue[queueIndex + 1]);
         }
         updateCoverArt(index);
+        // Flash play icon overlay
+        if (activeCell) {
+          const overlay = activeCell.querySelector('.play-flash-overlay');
+          if (overlay) {
+            overlay.classList.remove('visible');
+            // Force reflow to restart animation
+            void overlay.offsetWidth;
+            overlay.classList.add('visible');
+            setTimeout(() => {
+              overlay.classList.remove('visible');
+            }, 3000);
+          }
+        }
       }
 
       function playNextTrack() {

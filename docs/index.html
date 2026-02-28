@@ -678,18 +678,7 @@
         }
         updateCoverArt(index);
         // Flash play icon overlay
-        if (activeCell) {
-          const overlay = activeCell.querySelector('.play-flash-overlay');
-          if (overlay) {
-            overlay.classList.remove('visible');
-            // Force reflow to restart animation
-            void overlay.offsetWidth;
-            overlay.classList.add('visible');
-            setTimeout(() => {
-              overlay.classList.remove('visible');
-            }, 3000);
-          }
-        }
+        flashPlayIconOnActiveCell();
       }
 
       function playNextTrack() {
@@ -702,6 +691,20 @@
           queue = generateShuffledQueue(queue[0]);
         }
         playTrack(queue[queueIndex]);
+      }
+
+      function flashPlayIconOnActiveCell() {
+        if (activeCell) {
+          const overlay = activeCell.querySelector('.play-flash-overlay');
+          if (overlay) {
+            overlay.classList.remove('visible');
+            void overlay.offsetWidth; // Force reflow to restart animation
+            overlay.classList.add('visible');
+            setTimeout(() => {
+              overlay.classList.remove('visible');
+            }, 3000);
+          }
+        }
       }
 
       cells.forEach((cell, index) => {
@@ -758,6 +761,7 @@
           setNextCell(queue[queueIndex + 1]);
         }
         updatePlayToggleIcon(true);
+        flashPlayIconOnActiveCell();
       });
 
       audio.addEventListener("pause", () => {
@@ -859,7 +863,7 @@
           infoDialog.classList.remove('visible');
         } else if (e.key === 'i' || e.key === 'I') {
           infoDialog.classList.toggle('visible');
-        } else if (e.key === 'c' || e.key === 'C') {
+        } else if (e.key === 'o' || e.key === 'O') {
           toggleViewMode();
         } else if (e.key === 'n' || e.key === 'N') {
           playNextTrack();

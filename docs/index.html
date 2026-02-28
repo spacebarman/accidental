@@ -165,7 +165,7 @@
         background-position: center;
         background-size: cover;
         background-repeat: no-repeat;
-        transition: transform 100ms linear;
+        transition: transform 0.15s ease-out;
       }
 
       .cell:hover {
@@ -202,7 +202,7 @@
           filter: brightness(.3);
         }
         50% {
-          filter: brightness(1);
+          filter: brightness(.8);
         }
       }
 
@@ -226,6 +226,7 @@
         width: 0%;
         height: 100%;
         background: #adadad;
+        transition: width 0.15s linear;
       }
 
       a {
@@ -446,10 +447,13 @@
         </div>
 
         <div id="controls">
-          <button class="view-toggle play-toggle" id="playToggle" aria-pressed="false" aria-label="Play">
+          <button class="view-toggle play-toggle" id="playToggle" aria-pressed="false" aria-label="Play" title="Play / pause audio">
             <img src="images/icon-play.svg" alt="Play" width="16" height="16">
           </button>
-          <button class="view-toggle" id="viewToggle">
+            <button class="view-toggle" id="nextToggle" aria-label="Next track" title="Play next track">
+              <img src="images/icon-next.svg" alt="Next track" width="16" height="16">
+            </button>
+            <button class="view-toggle" id="viewToggle" title="Toggle cover/grid view">
             <img src="images/icon-cover.svg" alt="Toggle view" width="16" height="16">
           </button>
         </div>
@@ -487,7 +491,7 @@
           aboutAlbumP3: "Melodies, harmonies or rhythmical patterns were spontaneous responses inspired by accidental noises and sound textures. I captured those textures from multiple sources: unexpected electrical noises***, degraded drones, or loops downtuned beyond recognition. I then acted as an interlocutor, evaluating those abstract sound prompts and replying with musical passages on top, around, or despite them. The result was a bunch of happy accidents.",
           aboutAlbumP4: "The album is an appreciation of texture in both sound and visual form. The artworks are abstract photographs I've took in the last few years, macro captures of small worlds or surprising textures from simple everyday things. I hope you enjoy the images as much as the music.",
           notes: "NOTES",
-          notesText: "* Almost. The album has a title, after all. Also this info text is the most I've ever written about one of my musical works.<br/>** For the guitar geeks, I used almost exclusively <a href=\"https://www.chasebliss.com/lost-and-found\" target=\"_blank\">ChaseBliss' Lost+Found</a>, <a href=\"https://empresseffects.com/products/zoia\" target=\"_blank\">Empress Effects' Zoia</a> and <a href=\"https://line6.com/hx-stomp/\" target=\"_blank\">Line6 HX Stomp</a>. L+F was my master texture generator. With the Zoia, I programmed a very interactive stereo looper that allowed me to mangle loops and the live signal separately. I used the HX Stomp only for amp+cab simulation. Oh, I also used <a href=\"https://banananaeffects.com/products/abracadabra\" target=\"_blank\">Banana's Abracadabra</a> in one song. Can you guess which one?<br/>*** If I leave my pedalboard alone, it produces some ghostly bell-like sounds at random intervals. They're beautiful."
+          notesText: "* Almost. The album has a title, after all. Also this info text is the most I've ever written about one of my musical works.<br/>** For the guitar geeks, I used almost exclusively <a href=\"https://www.chasebliss.com/lost-and-found\" target=\"_blank\">ChaseBliss' Lost+Found</a>, <a href=\"https://empresseffects.com/products/zoia\" target=\"_blank\">Empress Effects' Zoia</a> and <a href=\"https://line6.com/hx-stomp/\" target=\"_blank\">Line6 HX Stomp</a>. L+F was my master texture generator. With the Zoia, I programmed a very interactive stereo looper that allowed me to mangle loops and the live signal separately. I used the HX Stomp only for amp+cab simulation. Oh, I also used <a href=\"https://banananaeffects.com/products/abracadabra\" target=\"_blank\">Banana's Abracadabra</a> in one song. Can you guess which one?<br/>*** If I don't play my guitar, my pedalboard spontaneously produces ghostly, bell-like sounds at random intervals. They're beautiful."
         },
         es: {
           closeBtn: "Cerrar",
@@ -499,7 +503,7 @@
           aboutAlbumP3: "Las melodías, armonías o patrones rítmicos fueron respuestas espontáneas inspiradas en ruidos accidentales y texturas sonoras. Capturé esas texturas de múltiples fuentes: ruidos eléctricos inesperados***, drones degradados o loops desafinados hasta quedar irreconocibles. Luego actué como un interlocutor, evaluando esos sonidos abstractos y respondiendo con pasajes musicales encima, alrededor, o a pesar de ellos. El resultado fue un conjunto de accidentes felices.",
           aboutAlbumP4: "El álbum es una apreciación de la textura tanto en forma sonora como visual. Los artes de portada son fotografías abstractas que he tomado en los últimos años, capturas macro de pequeños mundos o texturas sorprendentes de cosas cotidianas. Espero que disfrutes tanto de las imágenes como de la música.",
           notes: "NOTAS",
-          notesText: "* Casi. El álbum tiene un título, después de todo. Además, este texto de información es lo más que he escrito sobre uno de mis trabajos musicales.<br/>** Para los aficionados a la guitarra, utilicé casi exclusivamente <a href=\"https://www.chasebliss.com/lost-and-found\" target=\"_blank\">ChaseBliss' Lost+Found</a>, <a href=\"https://empresseffects.com/products/zoia\" target=\"_blank\">Empress Effects' Zoia</a> y <a href=\"https://line6.com/hx-stomp/\" target=\"_blank\">Line6 HX Stomp</a>. L+F fue mi generador de texturas maestro. Con la Zoia, programé un looper estéreo muy interactivo que me permitió manipular bucles y la señal en vivo por separado. Utilicé el HX Stomp solo para simulación de amplificador + gabinete. Oh, también usé <a href=\"https://banananaeffects.com/products/abracadabra\" target=\"_blank\">Banana's Abracadabra</a> en una canción. ¿Puedes adivinar cuál?<br/>*** Si dejo mi placa de pedales sola, produce algunos sonidos de campanas fantasmales a intervalos aleatorios. Son hermosos."
+          notesText: "* Casi. El álbum tiene un título, después de todo. Además, este texto de información es lo más que he escrito sobre uno de mis trabajos musicales.<br/>** Para los aficionados a la guitarra, utilicé casi exclusivamente <a href=\"https://www.chasebliss.com/lost-and-found\" target=\"_blank\">ChaseBliss' Lost+Found</a>, <a href=\"https://empresseffects.com/products/zoia\" target=\"_blank\">Empress Effects' Zoia</a> y <a href=\"https://line6.com/hx-stomp/\" target=\"_blank\">Line6 HX Stomp</a>. L+F fue mi generador de texturas maestro. Con la Zoia, programé un looper estéreo muy interactivo que me permitió manipular bucles y la señal en vivo por separado. Utilicé el HX Stomp solo para simulación de amplificador + gabinete. Oh, también usé <a href=\"https://banananaeffects.com/products/abracadabra\" target=\"_blank\">Banana's Abracadabra</a> en una canción. ¿Puedes adivinar cuál?<br/>*** Sin tocar yo guitrarra, mi pedalera produce, de manera espontánea y aleatoria, sonidos de campanas fantasmales. Son muy bonitos."
         },
         ca: {
           closeBtn: "Tancar",
@@ -511,7 +515,7 @@
           aboutAlbumP3: "Les melodies, harmonies o patrons rítmics van ser respostes espontànies inspirades en sorolls accidentals i textures sonores. Vaig capturar aquestes textures de múltiples fonts: sorolls elèctrics inesperats***, drones degradats o loops desafinats més enllà del reconeixement. Llavors vaig actuar com a interlocutor, avaluant aquests sons abstractes i responent amb passatges musicals a sobre, al voltant o malgrat d'ells. El resultat va ser un grapat d'accidents feliços.",
           aboutAlbumP4: "L'àlbum és una apreciació de la textura tant en forma sonora com visual. Les arts de coberta són fotografies abstractes que he pres en els últims anys, captures macro de petit mons o textures sorprenents de coses quotidianes. Espero que gaudiu tant de les imatges com de la música.",
           notes: "NOTES",
-          notesText: "* Gairebé. L'àlbum té un títol, després de tot. A més, aquest text informatiu és el més que he escrit sobre una de les meves obres musicals.<br/>** Per als aficionats a la guitarra, vaig utilitzar gairebé exclusivament <a href=\"https://www.chasebliss.com/lost-and-found\" target=\"_blank\">ChaseBliss' Lost+Found</a>, <a href=\"https://empresseffects.com/products/zoia\" target=\"_blank\">Empress Effects' Zoia</a> i <a href=\"https://line6.com/hx-stomp/\" target=\"_blank\">Line6 HX Stomp</a>. L+F va ser el meu generador de textures mestre. Amb la Zoia, vaig programar un looper estèreo molt interactiu que em va permetre manipular bucles i el senyal en viu per separat. Vaig utilitzar el HX Stomp només per a la simulació d'amplificador + gabinet. Ah, també vaig utilitzar <a href=\"https://banananaeffects.com/products/abracadabra\" target=\"_blank\">Banana's Abracadabra</a> en una cançó. Pots endevinar quina?<br/>*** Si deixo la meva placa de pedals sola, produeix alguns sons de campanes fantasmagues a intervals aleatoris. Són preciosos."
+          notesText: "* Gairebé. L'àlbum té un títol, després de tot. A més, aquest text informatiu és el més que he escrit sobre una de les meves obres musicals.<br/>** Per als aficionats a la guitarra, vaig utilitzar gairebé exclusivament <a href=\"https://www.chasebliss.com/lost-and-found\" target=\"_blank\">ChaseBliss' Lost+Found</a>, <a href=\"https://empresseffects.com/products/zoia\" target=\"_blank\">Empress Effects' Zoia</a> i <a href=\"https://line6.com/hx-stomp/\" target=\"_blank\">Line6 HX Stomp</a>. L+F va ser el meu generador de textures mestre. Amb la Zoia, vaig programar un looper estèreo molt interactiu que em va permetre manipular bucles i el senyal en viu per separat. Vaig utilitzar el HX Stomp només per a la simulació d'amplificador + gabinet. Ah, també vaig utilitzar <a href=\"https://banananaeffects.com/products/abracadabra\" target=\"_blank\">Banana's Abracadabra</a> en una cançó. Pots endevinar quina?<br/>*** Sense tocar jo guitrarra, la meva pedalera produeix, de manera espontània i aleatòria, sons de campanes fantasmals. Són molt bonics."
         }
       };
 
@@ -551,6 +555,7 @@
       const viewToggleImg = viewToggle.querySelector('img');
       const playToggle = document.getElementById('playToggle');
       const playToggleImg = playToggle ? playToggle.querySelector('img') : null;
+      const nextToggle = document.getElementById('nextToggle');
       let coverViewActive = false;
 
       function updatePlayToggleIcon(isPlaying) {
@@ -670,6 +675,18 @@
           setNextCell(queue[queueIndex + 1]);
         }
         updateCoverArt(index);
+      }
+
+      function playNextTrack() {
+        if (!queue.length) {
+          return;
+        }
+        queueIndex++;
+        if (queueIndex >= queue.length) {
+          queueIndex = 0;
+          queue = generateShuffledQueue(queue[0]);
+        }
+        playTrack(queue[queueIndex]);
       }
 
       cells.forEach((cell, index) => {
@@ -795,6 +812,9 @@
           audio.pause();
         }
       });
+      if (nextToggle) {
+        nextToggle.addEventListener('click', playNextTrack);
+      }
 
       coverView.addEventListener('click', () => {
         if (audio.paused) {
@@ -824,12 +844,7 @@
         } else if (e.key === 'c' || e.key === 'C') {
           toggleViewMode();
         } else if (e.key === 'n' || e.key === 'N') {
-          queueIndex++;
-          if (queueIndex >= queue.length) {
-            queueIndex = 0;
-            queue = generateShuffledQueue(queue[0]);
-          }
-          playTrack(queue[queueIndex]);
+          playNextTrack();
         }
       });
 

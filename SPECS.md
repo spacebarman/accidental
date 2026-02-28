@@ -1,25 +1,59 @@
-# Specs: `docs/index.html` Grid Rewrite
 
-## Goal
-Replace the current text-based landing page with a centered 4x4 image grid built from `docs/images/thumbnails`.
+# Accidental Web App – Technical Specifications
 
-## Requirements Mapping
-1. Remove all existing text and interaction from the HTML page.
-2. Render a 4x4 square grid (16 cells total).
-3. Use one thumbnail image per cell as the cell background (`cover00.jpg` to `cover15.jpg`).
-4. Keep the grid centered both vertically and horizontally in the viewport.
-5. Grid sizing:
-   - Default: grid side length is 80% of the viewport’s shortest dimension (`80vmin`).
-   - Mobile: grid side length is 100% of the viewport’s shortest dimension (`100vmin`).
-6. Hover behavior: hovered cell appears 50% transparent.
+## Overview
+This static web app presents a 4x4 grid of album artwork tiles, each corresponding to a track from the album "Accidental" by Spacebarman. The app provides a randomized audio playback experience, album information in multiple languages, and a visually engaging, accessible interface. All logic is implemented client-side in a single HTML file with embedded CSS and JavaScript.
 
-## Implementation Plan
-1. Remove existing typography, animation, and JavaScript from `docs/index.html`.
-2. Build a single `.grid` container with 16 `.cell` elements in HTML.
-3. Apply CSS Grid (`repeat(4, 1fr)`) with square container dimensions.
-4. Set each cell background image to one thumbnail file.
-5. Add hover style (`opacity: 0.5`) with a small transition.
-6. Add responsive media query for mobile sizing.
+## Features
 
-## Assumption
-- “dosc/images/thumbnail” refers to `docs/images/thumbnails` in this repository.
+- **4x4 Responsive Grid:**
+   - 16 tiles, each showing a unique album artwork thumbnail.
+   - Tiles highlight the currently playing track and indicate the next track visually.
+   - Clicking a tile starts playback of the corresponding track and shuffles the play order.
+
+- **Audio Playback:**
+   - Tracks are played in a randomized, non-repeating order until all have played.
+   - Playback controls: Play/Pause, Next Track, Toggle Grid/Cover View.
+   - Progress bar animates as audio plays; tile transforms reflect progress.
+   - Audio files are referenced via a base64-encoded, JSON-stringified playlist array, decoded at runtime for light obfuscation.
+
+- **Info Dialog:**
+   - Modal dialog with album information, instructions, and notes.
+   - Language selector (English, Spanish, Catalan) with persistent preference.
+   - “Get this album on Bandcamp” link (localized) and external site link.
+   - Accessible close button and keyboard shortcuts (Escape, I, C, N, Space).
+
+- **UI/UX Details:**
+   - Custom SVG icons for controls (play, pause, next, info, view toggle).
+   - Smooth CSS transitions for progress, tile transforms, and control states.
+   - Controls and info dialog are keyboard accessible and screen-reader friendly.
+   - Brand header: “SPACEBARMAN” links to the artist’s site; “ACCIDENTAL” is plain text.
+
+- **Obfuscation/Anti-leech:**
+   - Playlist URLs are not exposed directly in the source; they are decoded from a base64-encoded JSON string at runtime.
+   - Variable/function names and logic may be intentionally non-descriptive or rearranged for deterrence.
+   - No server-side protection; all files are statically hosted.
+
+## File Structure
+
+- `docs/index.html` – Main app (HTML, CSS, JS, SVG icons, logic)
+- `docs/images/thumbnails/` – 16 tile images
+- `docs/images/coverarts/` – 16 cover images for cover view
+- `docs/images/icon-*.svg` – SVG icons for controls
+- `docs/fonts/` – Custom fonts
+
+## Accessibility & Internationalization
+
+- All controls have ARIA labels and keyboard shortcuts.
+- Info dialog and controls are navigable via keyboard.
+- Album info is available in English, Spanish, and Catalan; language preference is saved in localStorage.
+
+## Limitations
+
+- Audio files are still accessible to determined users via browser dev tools or network inspection.
+- No DRM or server-side download protection.
+- Static hosting only; no backend or dynamic playlist generation.
+
+## Version
+
+Specs updated: February 2026

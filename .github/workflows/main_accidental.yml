@@ -23,17 +23,35 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: npm install, build, and test
+      - name: Install dependencies
+        working-directory: app
         run: |
-          npm install
+          npm ci
+
+      - name: Build and test app
+        working-directory: app
+        run: |
           npm run build --if-present
           npm run test --if-present
+
+      - name: Prepare deployment bundle
+        run: |
+          rm -rf deploy_bundle
+          mkdir -p deploy_bundle
+          cp -R app deploy_bundle/app
+          cp -R docs deploy_bundle/docs
+
+      - name: Archive deployment bundle
+        run: |
+          rm -f deploy_bundle.zip
+          cd deploy_bundle
+          zip -r ../deploy_bundle.zip .
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: deploy_bundle.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -47,6 +65,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-app
+          path: .
       
       - name: Login to Azure
         uses: azure/login@v2
@@ -61,5 +80,6 @@ jobs:
         with:
           app-name: 'accidental'
           slot-name: 'Production'
-          package: .
+          package: ./deploy_bundle.zip
+          startup-command: 'node app/server.js'
           

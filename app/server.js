@@ -57,15 +57,25 @@ const server = http.createServer((req, res) => {
   const pathname = decodeURIComponent(requestUrl.pathname);
 
   if (pathname === "/") {
-    res.writeHead(302, { Location: "https://www.spacebarman.com/accidental" });
-    res.end();
+    sendExternalLinkPage(res, {
+      title: "Accidental",
+      heading: "Accidental",
+      message: "Open the public album page:",
+      href: "https://www.spacebarman.com/accidental",
+      linkText: "www.spacebarman.com/accidental"
+    });
     return;
   }
 
   if (pathname === "/grid") {
     if (requestUrl.searchParams.get("qr") !== "true") {
-      res.writeHead(302, { Location: "https://www.spacebarman.com/accidental" });
-      res.end();
+      sendExternalLinkPage(res, {
+        title: "Grid Access",
+        heading: "Grid Access",
+        message: "This page is intended to be opened from the installation QR code. For the public album page, use:",
+        href: "https://www.spacebarman.com/accidental",
+        linkText: "www.spacebarman.com/accidental"
+      });
       return;
     }
 
@@ -156,9 +166,92 @@ wss.on("connection", (socket) => {
 
 server.listen(PORT, () => {
   console.log(`Accidental app listening on http://localhost:${PORT}`);
-  console.log(`Grid app:  http://localhost:${PORT}/grid`);
+  console.log(`Grid app:  http://localhost:${PORT}/grid?qr=true`);
   console.log(`Cover app: http://localhost:${PORT}/cover`);
 });
+
+function sendExternalLinkPage(res, { title, heading, message, href, linkText }) {
+  const html = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>${escapeHtml(title)}</title>
+    <style>
+      @font-face {
+        font-family: "BarlowCondensed";
+        src: url("/fonts/BarlowCondensed-Medium.ttf") format("truetype");
+      }
+
+      @font-face {
+        font-family: "Rubik";
+        src: url("/fonts/Rubik-VariableFont_wght.ttf") format("truetype");
+        font-weight: 100 900;
+      }
+
+      html, body {
+        margin: 0;
+        width: 100%;
+        min-height: 100%;
+        background: #0b0b0b;
+        color: #d8d8d8;
+        font-family: "Rubik", sans-serif;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      main {
+        max-width: 760px;
+        border: 1px solid #2e2e2e;
+        background: #131313;
+        padding: 24px;
+      }
+
+      h1 {
+        margin: 0 0 12px 0;
+        font-size: 28px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        font-family: "BarlowCondensed", sans-serif;
+      }
+
+      p {
+        margin: 0 0 12px 0;
+        line-height: 1.5;
+      }
+
+      a {
+        color: #efefef;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>${escapeHtml(heading)}</h1>
+      <p>${escapeHtml(message)}</p>
+      <p><a href="${escapeHtml(href)}" rel="noopener noreferrer">${escapeHtml(linkText)}</a></p>
+    </main>
+  </body>
+</html>`;
+
+  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+  res.end(html);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
 
 function handleMessage(socket, message) {
   const { type } = message || {};

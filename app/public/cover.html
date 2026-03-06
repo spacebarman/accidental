@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="ca">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Accidental Cover Display</title>
+    <title>Visualitzador de Portada - Accidental</title>
     <style>
       @font-face {
         font-family: "BarlowCondensed";
@@ -124,8 +124,8 @@
   </head>
   <body>
     <main class="stage">
-      <div id="cover" class="cover waiting" aria-label="Current album art"></div>
-      <div class="progress" aria-label="Playback progress">
+      <div id="cover" class="cover waiting" aria-label="Portada actual de l'àlbum"></div>
+      <div class="progress" aria-label="Progres de reproduccio">
         <div id="progressFill" class="progress-fill"></div>
       </div>
       <div class="brand">SPACEBARMAN · ACCIDENTAL</div>
@@ -133,7 +133,7 @@
 
     <div id="unlockOverlay" class="unlock-overlay visible" role="dialog" aria-live="polite">
       <div id="unlockMessage" class="unlock-message">
-        Feu clic a qualsevol lloc per habilitar la reproducció d'àudio
+        Feu clic o premeu Espai/Retorn per habilitar la reproducció d'àudio
         <span>Obligatori després de cada arrencada</span>
       </div>
     </div>
@@ -189,7 +189,7 @@
           audio.currentTime = 0;
         } catch {
           audioUnlocked = false;
-          showUnlockMessage("Tap anywhere again to enable audio playback");
+          showUnlockMessage("Feu clic o premeu Espai/Retorn per habilitar la reproducció d'àudio");
           return;
         } finally {
           audio.volume = previousVolume;
@@ -304,7 +304,7 @@
 
         if (!audioUnlocked) {
           pendingPlay = { index, startTime };
-          showUnlockMessage("Tap anywhere to enable audio and start playback");
+          showUnlockMessage("Feu clic o premeu Espai/Retorn per habilitar l'àudio i iniciar la reproducció");
           return;
         }
 
@@ -325,7 +325,7 @@
           audio.play().catch(() => {
             audioUnlocked = false;
             pendingPlay = { index, startTime };
-            showUnlockMessage("Tap anywhere to enable audio and continue playback");
+            showUnlockMessage("Feu clic o premeu Espai/Retorn per habilitar l'àudio i continuar la reproducció");
           });
         };
 
@@ -390,6 +390,17 @@
       });
 
       connect();
+
+      window.addEventListener("keydown", (event) => {
+        if (!unlockOverlay.classList.contains("visible")) {
+            return;
+        }
+
+        if (event.code === "Space" || event.code === "Enter") {
+            event.preventDefault();
+            unlockAudio();
+        }
+        });
     </script>
   </body>
 </html>

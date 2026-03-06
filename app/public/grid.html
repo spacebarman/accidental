@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Accidental Grid Remote</title>
+    <style>
+      @font-face {
+        font-family: "BarlowCondensed";
+        src: url("/fonts/BarlowCondensed-Medium.ttf") format("truetype");
+      }
+
+      @font-face {
+        font-family: "Rubik";
+        src: url("/fonts/Rubik-VariableFont_wght.ttf") format("truetype");
+        font-weight: 100 900;
+      }
+
+      :root {
+        --bg: #070707;
+        --panel: #101010;
+        --text: #d6d6d6;
+        --muted: #888888;
+        --accent: #d4d4d4;
+        --active: #ffffff;
+        --next: #aaaaaa;
+        --grid-size: min(96vw, 78vh);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at 20% 20%, #181818 0%, var(--bg) 55%);
+        color: var(--text);
+      }
+
+      body {
+        font-family: "Rubik", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2.5vmin;
+      }
+
+      .app {
+        width: min(98vw, 680px);
+      }
+
+      .topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2vmin;
+        font-family: "BarlowCondensed", sans-serif;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .brand {
+        color: #9f9f9f;
+        font-size: clamp(15px, 2.2vmin, 24px);
+      }
+
+      .status {
+        border: 1px solid #444444;
+        border-radius: 999px;
+        padding: 0.25em 0.75em;
+        font-size: clamp(11px, 1.5vmin, 16px);
+      }
+
+      .status.connected {
+        border-color: #8f8f8f;
+        color: #f3f3f3;
+      }
+
+      .grid {
+        width: 100%;
+        aspect-ratio: 1;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        gap: 0;
+        background: #000000;
+        border: 1px solid #242424;
+      }
+
+      .tile {
+        position: relative;
+        border: 0;
+        background: #000000;
+        padding: 0;
+        cursor: pointer;
+        overflow: hidden;
+        filter: brightness(0.63);
+        transition: filter 140ms linear;
+      }
+
+      .tile::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: var(--thumb);
+        background-position: center;
+        background-size: cover;
+        transform: scale(1);
+        transition: transform 220ms ease;
+      }
+
+      .tile:active::before {
+        transform: scale(0.96);
+      }
+
+      .play-indicator {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 52%;
+        height: 52%;
+        transform: translate(-50%, -50%);
+        opacity: 0;
+        transition: opacity 120ms linear;
+        pointer-events: none;
+        z-index: 2;
+        filter: brightness(0) contrast(1.2);
+      }
+
+      .tile.playing .play-indicator {
+        opacity: 1;
+      }
+
+      .tile.active {
+        filter: brightness(1);
+        box-shadow: inset 0 0 32px 10px rgba(255, 255, 255, 0.4);
+      }
+
+      .tile.next {
+        animation: pulse 1.8s ease-in-out infinite;
+      }
+
+      .tile.all-pulse {
+        animation: pulse 1.8s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          filter: brightness(0.55);
+        }
+        50% {
+          filter: brightness(0.84);
+        }
+      }
+
+      .footer {
+        margin-top: 2.2vmin;
+        background: none;
+        border: 0;
+        padding: 12px 0;
+        line-height: 1.5;
+        font-size: clamp(12px, 1.8vmin, 17px);
+        color: #efefef;
+      }
+
+      .footer strong {
+        color: #efefef;
+        font-family: "BarlowCondensed", sans-serif;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-size: 1.05em;
+      }
+
+      .footer a {
+        color: #efefef;
+      }
+
+      @media (orientation: landscape) and (max-height: 530px) {
+        body {
+          align-items: flex-start;
+          padding-top: 12px;
+        }
+
+        .footer {
+          margin-top: 10px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        body {
+          overflow-y: hidden;
+          align-items: flex-start;
+          justify-content: center;
+          padding-top: calc(min(100vw, 100vh) * 0.025);
+        }
+
+        .topline {
+          margin-bottom: calc(min(100vw, 100vh) * 0.012);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <div class="topline">
+        <div class="brand">SPACEBARMAN · ACCIDENTAL</div>
+        <div id="connectionStatus" class="status">connecting</div>
+      </div>
+
+      <div id="grid" class="grid" aria-label="Album track grid"></div>
+
+      <section class="footer" aria-label="Instructions">
+        <strong>Instructions</strong>
+        <p>
+        <div>Toca qualsevol casella per reproduir una pista. La reproducció continua en ordre aleatori.</div>
+        <div><a href="https://example.com" target="_blank" rel="noreferrer noopener">Buy this album (placeholder link)</a></div>
+        </p>
+        <p>
+        <div>Toca cualqjuier casilla para reproducir una pista. La reproducción continuará en orden aleatorio.</div>
+        <div><a href="https://example.com" target="_blank" rel="noreferrer noopener">Buy this album (placeholder link)</a></div>
+        </p>
+        <p>
+        <div>Tap any tile to play a track. Playback continues in random order.</div>
+        <div><a href="https://example.com" target="_blank" rel="noreferrer noopener">Buy this album (placeholder link)</a></div>
+        </p>
+
+      </section>
+    </main>
+
+    <script>
+      const connectionStatus = document.getElementById("connectionStatus");
+      const grid = document.getElementById("grid");
+
+      let socket = null;
+      let reconnectDelay = 1000;
+      let reconnectTimer = null;
+      let tracks = [];
+      let announcedGridOpen = false;
+      let activeIndex = null;
+      let nextIndex = null;
+      let isPlaying = false;
+
+      function wsUrl() {
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        return `${protocol}//${window.location.host}/ws`;
+      }
+
+      function setConnectionStatus(value) {
+        connectionStatus.textContent = value;
+        connectionStatus.classList.toggle("connected", value === "connected");
+      }
+
+      function connect() {
+        setConnectionStatus("connecting");
+        socket = new WebSocket(wsUrl());
+
+        socket.addEventListener("open", () => {
+          setConnectionStatus("connected");
+          reconnectDelay = 1000;
+
+          send({ type: "hello", role: "grid" });
+
+          if (!announcedGridOpen) {
+            announcedGridOpen = true;
+            send({
+              type: "grid_opened",
+              source: "qr_scan",
+              scanEventId: createScanEventId()
+            });
+          }
+
+          send({ type: "sync_request" });
+        });
+
+        socket.addEventListener("message", (event) => {
+          let message;
+          try {
+            message = JSON.parse(event.data);
+          } catch {
+            return;
+          }
+
+          handleMessage(message);
+        });
+
+        socket.addEventListener("close", () => {
+          setConnectionStatus("reconnecting");
+          scheduleReconnect();
+        });
+
+        socket.addEventListener("error", () => {
+          socket.close();
+        });
+      }
+
+      function scheduleReconnect() {
+        if (reconnectTimer) {
+          return;
+        }
+
+        reconnectTimer = setTimeout(() => {
+          reconnectTimer = null;
+          reconnectDelay = Math.min(reconnectDelay * 2, 8000);
+          connect();
+        }, reconnectDelay);
+      }
+
+      function handleMessage(message) {
+        if (message.type === "album_manifest") {
+          tracks = message.tracks || [];
+          renderGrid();
+          return;
+        }
+
+        if (message.type === "state_update") {
+          activeIndex = Number.isInteger(message.activeIndex) ? message.activeIndex : null;
+          nextIndex = Number.isInteger(message.nextIndex) ? message.nextIndex : null;
+          isPlaying = Boolean(message.isPlaying);
+          updateGridClasses();
+        }
+      }
+
+      function renderGrid() {
+        grid.innerHTML = "";
+
+        tracks.forEach((track) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "tile";
+          button.style.setProperty("--thumb", `url('${track.thumbnail}')`);
+          button.setAttribute("aria-label", `Play ${track.title}`);
+
+          const playIcon = document.createElement("img");
+          playIcon.className = "play-indicator";
+          playIcon.src = "/images/icon-play.svg";
+          playIcon.alt = "";
+          playIcon.setAttribute("aria-hidden", "true");
+          button.appendChild(playIcon);
+
+          button.addEventListener("click", () => {
+            send({ type: "select_track", index: track.index });
+          });
+
+          grid.appendChild(button);
+        });
+
+        updateGridClasses();
+      }
+
+      function updateGridClasses() {
+        const tiles = Array.from(grid.children);
+        const shouldPulseAll = activeIndex === null && !isPlaying;
+
+        tiles.forEach((tile, index) => {
+          tile.classList.toggle("active", index === activeIndex);
+          tile.classList.toggle("next", !shouldPulseAll && index === nextIndex && index !== activeIndex);
+          tile.classList.toggle("all-pulse", shouldPulseAll);
+          tile.classList.toggle("playing", isPlaying && index === activeIndex);
+        });
+      }
+
+      function createScanEventId() {
+        if (window.crypto && typeof window.crypto.randomUUID === "function") {
+          return window.crypto.randomUUID();
+        }
+
+        const stamp = Date.now();
+        const random = Math.floor(Math.random() * 1000000);
+        return `${stamp}-${random}`;
+      }
+
+      function send(payload) {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+          return;
+        }
+
+        socket.send(JSON.stringify(payload));
+      }
+
+      connect();
+    </script>
+  </body>
+</html>

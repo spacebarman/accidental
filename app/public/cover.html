@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Accidental Cover Display</title>
+    <style>
+      @font-face {
+        font-family: "BarlowCondensed";
+        src: url("/fonts/BarlowCondensed-Medium.ttf") format("truetype");
+      }
+
+      :root {
+        --bg: #000000;
+        --line: #323232;
+        --fill: #d5d5d5;
+        --text: #a9a9a9;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at 40% 25%, #161616 0%, var(--bg) 58%);
+        color: #ffffff;
+        overflow: hidden;
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+        font-family: "BarlowCondensed", sans-serif;
+      }
+
+      .stage {
+        width: min(84vmin, 1100px);
+      }
+
+      .cover {
+        width: 100%;
+        aspect-ratio: 1;
+        background: #000000;
+        background-size: cover;
+        background-position: center;
+        border: 1px solid #222222;
+      }
+
+      .cover.waiting {
+        background-image: none;
+      }
+
+      .waiting-label {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: calc(7.5vmin + 24px);
+        color: #868686;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: clamp(14px, 2vmin, 26px);
+      }
+
+      .progress {
+        width: 100%;
+        height: 10px;
+        background: var(--line);
+      }
+
+      .progress-fill {
+        width: 0%;
+        height: 100%;
+        background: var(--fill);
+        transition: width 120ms linear;
+      }
+
+      .brand {
+        margin-top: 0.7vmin;
+        color: var(--text);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-align: center;
+        font-size: clamp(18px, 2.25vmin, 34px);
+      }
+
+      .unlock-overlay {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.82);
+        z-index: 100;
+        padding: 4vw;
+      }
+
+      .unlock-overlay.visible {
+        display: flex;
+      }
+
+      .unlock-message {
+        border: 2px solid #d8d8d8;
+        background: rgba(20, 20, 20, 0.95);
+        max-width: 980px;
+        padding: clamp(20px, 3.2vmin, 48px);
+        text-align: center;
+        font-size: clamp(22px, 3.2vmin, 56px);
+        line-height: 1.25;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .unlock-message span {
+        display: block;
+        margin-top: 0.5em;
+        color: #8d8d8d;
+        font-size: 0.55em;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage">
+      <div id="cover" class="cover waiting" aria-label="Current album art"></div>
+      <div class="progress" aria-label="Playback progress">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+      <div class="brand">SPACEBARMAN · ACCIDENTAL</div>
+    </main>
+
+    <div id="unlockOverlay" class="unlock-overlay visible" role="dialog" aria-live="polite">
+      <div id="unlockMessage" class="unlock-message">
+        Tap anywhere to enable audio playback
+        <span>Required after every installation boot</span>
+      </div>
+    </div>
+
+    <script>
+      const coverEl = document.getElementById("cover");
+      const progressFill = document.getElementById("progressFill");
+      const unlockOverlay = document.getElementById("unlockOverlay");
+      const unlockMessage = document.getElementById("unlockMessage");
+
+      const audio = new Audio();
+      audio.preload = "auto";
+
+      let tracks = [];
+      let socket = null;
+      let reconnectDelay = 1000;
+      let reconnectTimer = null;
+
+      let audioUnlocked = false;
+      let pendingPlay = null;
+      let currentIndex = null;
+      let lastStatusSentAt = 0;
+
+      function wsUrl() {
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        return `${protocol}//${window.location.host}/ws`;
+      }
+
+      function showUnlockMessage(message) {
+        unlockMessage.firstChild.textContent = message;
+        unlockOverlay.classList.add("visible");
+      }
+
+      function hideUnlockMessage() {
+        unlockOverlay.classList.remove("visible");
+      }
+
+      async function unlockAudio() {
+        audioUnlocked = true;
+
+        const previousSrc = audio.src;
+
+        if (!audio.src && tracks.length > 0) {
+          audio.src = tracks[0].audio;
+        }
+
+        const previousVolume = audio.volume;
+        audio.volume = 0;
+
+        try {
+          await audio.play();
+          audio.pause();
+          audio.currentTime = 0;
+        } catch {
+          audioUnlocked = false;
+          showUnlockMessage("Tap anywhere again to enable audio playback");
+          return;
+        } finally {
+          audio.volume = previousVolume;
+        }
+
+        if (!previousSrc) {
+          audio.removeAttribute("src");
+          audio.load();
+        }
+
+        hideUnlockMessage();
+
+        if (pendingPlay) {
+          const command = pendingPlay;
+          pendingPlay = null;
+          playTrack(command.index, command.startTime || 0);
+        }
+      }
+
+      function connect() {
+        socket = new WebSocket(wsUrl());
+
+        socket.addEventListener("open", () => {
+          reconnectDelay = 1000;
+          send({ type: "hello", role: "cover" });
+          send({ type: "sync_request" });
+        });
+
+        socket.addEventListener("message", (event) => {
+          let message;
+          try {
+            message = JSON.parse(event.data);
+          } catch {
+            return;
+          }
+
+          handleMessage(message);
+        });
+
+        socket.addEventListener("close", () => {
+          scheduleReconnect();
+        });
+
+        socket.addEventListener("error", () => {
+          socket.close();
+        });
+      }
+
+      function scheduleReconnect() {
+        if (reconnectTimer) {
+          return;
+        }
+
+        reconnectTimer = setTimeout(() => {
+          reconnectTimer = null;
+          reconnectDelay = Math.min(reconnectDelay * 2, 8000);
+          connect();
+        }, reconnectDelay);
+      }
+
+      function handleMessage(message) {
+        if (message.type === "album_manifest") {
+          tracks = message.tracks || [];
+          return;
+        }
+
+        if (message.type === "reset_session") {
+          audio.pause();
+          audio.currentTime = 0;
+          currentIndex = null;
+          coverEl.style.backgroundImage = "none";
+          coverEl.classList.add("waiting");
+          progressFill.style.width = "0%";
+          sendStatus(true);
+          return;
+        }
+
+        if (message.type === "play_track") {
+          playTrack(message.index, Number(message.startTime) || 0);
+          return;
+        }
+
+        if (message.type === "state_update") {
+          if (Number.isInteger(message.activeIndex)) {
+            currentIndex = message.activeIndex;
+            updateCover(currentIndex);
+          }
+          if (Number.isFinite(message.currentTime) && Number.isFinite(message.duration) && message.duration > 0) {
+            const ratio = Math.min(100, Math.max(0, (message.currentTime / message.duration) * 100));
+            progressFill.style.width = `${ratio}%`;
+          }
+        }
+      }
+
+      function updateCover(index) {
+        const track = tracks[index];
+        if (!track) {
+          return;
+        }
+
+        coverEl.style.backgroundImage = `url('${track.cover}')`;
+        coverEl.classList.remove("waiting");
+      }
+
+      function playTrack(index, startTime) {
+        if (!Number.isInteger(index) || !tracks[index]) {
+          return;
+        }
+
+        currentIndex = index;
+        updateCover(index);
+
+        if (!audioUnlocked) {
+          pendingPlay = { index, startTime };
+          showUnlockMessage("Tap anywhere to enable audio and start playback");
+          return;
+        }
+
+        const track = tracks[index];
+        const shouldSwapSource = !audio.src || !audio.src.endsWith(track.audio);
+
+        if (shouldSwapSource) {
+          audio.src = track.audio;
+        }
+
+        const seekAndPlay = () => {
+          if (Number.isFinite(startTime) && startTime > 0 && Number.isFinite(audio.duration) && startTime < audio.duration) {
+            audio.currentTime = startTime;
+          } else {
+            audio.currentTime = 0;
+          }
+
+          audio.play().catch(() => {
+            audioUnlocked = false;
+            pendingPlay = { index, startTime };
+            showUnlockMessage("Tap anywhere to enable audio and continue playback");
+          });
+        };
+
+        if (shouldSwapSource) {
+          audio.addEventListener("loadedmetadata", seekAndPlay, { once: true });
+        } else {
+          seekAndPlay();
+        }
+      }
+
+      function sendStatus(force) {
+        const now = performance.now();
+        if (!force && now - lastStatusSentAt < 250) {
+          return;
+        }
+
+        lastStatusSentAt = now;
+
+        send({
+          type: "cover_status",
+          activeIndex: currentIndex,
+          isPlaying: !audio.paused && !audio.ended,
+          currentTime: Number.isFinite(audio.currentTime) ? audio.currentTime : 0,
+          duration: Number.isFinite(audio.duration) ? audio.duration : 0
+        });
+      }
+
+      function send(payload) {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+          return;
+        }
+
+        socket.send(JSON.stringify(payload));
+      }
+
+      audio.addEventListener("timeupdate", () => {
+        if (Number.isFinite(audio.duration) && audio.duration > 0) {
+          const ratio = Math.min(100, Math.max(0, (audio.currentTime / audio.duration) * 100));
+          progressFill.style.width = `${ratio}%`;
+        } else {
+          progressFill.style.width = "0%";
+        }
+
+        sendStatus(false);
+      });
+
+      audio.addEventListener("play", () => {
+        sendStatus(true);
+      });
+
+      audio.addEventListener("pause", () => {
+        sendStatus(true);
+      });
+
+      audio.addEventListener("ended", () => {
+        progressFill.style.width = "0%";
+        send({ type: "track_ended" });
+      });
+
+      unlockOverlay.addEventListener("click", () => {
+        unlockAudio();
+      });
+
+      connect();
+    </script>
+  </body>
+</html>

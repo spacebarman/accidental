@@ -1,0 +1,13 @@
+{
+  "name": "accidental-installation-player",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Grid remote + cover display player for Spacebarman - Accidental",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

@@ -153,6 +153,7 @@
       let reconnectTimer = null;
 
       let audioUnlocked = false;
+      let hasUserActivatedAudio = false;
       let pendingPlay = null;
       let currentIndex = null;
       let lastStatusSentAt = 0;
@@ -165,7 +166,23 @@
         return `${protocol}//${window.location.host}/ws`;
       }
 
+      function isAudioActivelyPlaying() {
+        return !audio.paused && !audio.ended;
+      }
+
+      function isPolicyLockError(error) {
+        const name = error && typeof error === "object" ? error.name : "";
+        return name === "NotAllowedError" || name === "SecurityError";
+      }
+
       function showUnlockMessage(message) {
+        if (hasUserActivatedAudio || isAudioActivelyPlaying()) {
+          audioUnlocked = true;
+          pendingPlay = null;
+          hideUnlockMessage();
+          return;
+        }
+
         unlockMessage.firstChild.textContent = message;
         unlockOverlay.classList.add("visible");
       }
@@ -195,9 +212,15 @@
           await audio.play();
           audio.pause();
           audio.currentTime = 0;
-        } catch {
-          audioUnlocked = false;
-          showUnlockMessage("Feu clic o premeu Espai/Retorn per habilitar la reproducció d'àudio");
+          hasUserActivatedAudio = true;
+        } catch (error) {
+          if (isPolicyLockError(error)) {
+            audioUnlocked = false;
+            showUnlockMessage("Feu clic o premeu Espai/Retorn per habilitar la reproducció d'àudio");
+          } else {
+            audioUnlocked = hasUserActivatedAudio;
+            hideUnlockMessage();
+          }
           return;
         } finally {
           audio.volume = previousVolume;
@@ -294,11 +317,39 @@
             currentIndex = message.activeIndex;
             updateCover(currentIndex);
           }
+
+          recoverPlaybackFromState(message);
+
           if (Number.isFinite(message.currentTime) && Number.isFinite(message.duration) && message.duration > 0) {
             const ratio = Math.min(100, Math.max(0, (message.currentTime / message.duration) * 100));
             progressFill.style.width = `${ratio}%`;
           }
         }
+      }
+
+      function recoverPlaybackFromState(message) {
+        const stateIndex = Number.isInteger(message.activeIndex) ? message.activeIndex : null;
+        if (stateIndex === null || !message.isPlaying || !tracks[stateIndex]) {
+          return;
+        }
+
+        const track = tracks[stateIndex];
+        const hasSameSource = Boolean(audio.src) && audio.src.endsWith(track.audio);
+        const isActivelyPlaying = !audio.paused && !audio.ended;
+
+        if (hasSameSource && isActivelyPlaying && currentIndex === stateIndex) {
+          return;
+        }
+
+        if (pendingPlay && pendingPlay.index === stateIndex) {
+          return;
+        }
+
+        // Recover audio after late join/reconnect when play_track may have been missed.
+        const startTime = Number.isFinite(message.currentTime) && message.currentTime > 0
+          ? Number(message.currentTime)
+          : 0;
+        playTrack(stateIndex, startTime);
       }
 
       function updateCover(index) {
@@ -319,6 +370,18 @@
         currentIndex = index;
         updateCover(index);
 
+        if (hasUserActivatedAudio) {
+          audioUnlocked = true;
+          pendingPlay = null;
+          hideUnlockMessage();
+        }
+
+        if (!audioUnlocked && isAudioActivelyPlaying()) {
+          audioUnlocked = true;
+          pendingPlay = null;
+          hideUnlockMessage();
+        }
+
         if (!audioUnlocked) {
           pendingPlay = { index, startTime };
           showUnlockMessage("Feu clic o premeu Espai/Retorn per habilitar l'àudio i iniciar la reproducció");
@@ -329,11 +392,32 @@
         const shouldSwapSource = !audio.src || !audio.src.endsWith(track.audio);
 
         const playNow = () => {
-          audio.play().catch(() => {
-            audioUnlocked = false;
-            pendingPlay = { index, startTime };
-            showUnlockMessage("Feu clic o premeu Espai/Retorn per habilitar l'àudio i continuar la reproducció");
-          });
+          audio.play()
+            .then(() => {
+              audioUnlocked = true;
+              hasUserActivatedAudio = true;
+              pendingPlay = null;
+              hideUnlockMessage();
+            })
+            .catch((error) => {
+              if (isAudioActivelyPlaying()) {
+                audioUnlocked = true;
+                pendingPlay = null;
+                hideUnlockMessage();
+                return;
+              }
+
+              if (!hasUserActivatedAudio && isPolicyLockError(error)) {
+                audioUnlocked = false;
+                pendingPlay = { index, startTime };
+                showUnlockMessage("Feu clic o premeu Espai/Retorn per habilitar l'àudio i continuar la reproducció");
+                return;
+              }
+
+              audioUnlocked = hasUserActivatedAudio;
+              pendingPlay = null;
+              hideUnlockMessage();
+            });
         };
 
         const applyStartTime = () => {
@@ -422,7 +506,18 @@
       });
 
       audio.addEventListener("play", () => {
+        audioUnlocked = true;
+        hasUserActivatedAudio = true;
+        pendingPlay = null;
+        hideUnlockMessage();
         sendStatus(true);
+      });
+
+      audio.addEventListener("playing", () => {
+        audioUnlocked = true;
+        hasUserActivatedAudio = true;
+        pendingPlay = null;
+        hideUnlockMessage();
       });
 
       audio.addEventListener("pause", () => {

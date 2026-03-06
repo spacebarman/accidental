@@ -30,7 +30,8 @@ const state = {
   isPlaying: false,
   currentTime: 0,
   duration: 0,
-  lastScanEventId: null
+  lastScanEventId: null,
+  lastCoverOpenEventId: null
 };
 
 const clients = {
@@ -274,6 +275,15 @@ function handleMessage(socket, message) {
     return;
   }
 
+  if (type === "cover_opened") {
+    if (socket.role !== "cover") {
+      return;
+    }
+
+    handleCoverOpened(message.openEventId || null);
+    return;
+  }
+
   if (type === "select_track") {
     if (socket.role !== "grid") {
       return;
@@ -348,8 +358,25 @@ function removeClient(socket) {
 }
 
 function handleGridOpened(scanEventId) {
-  state.sessionId += 1;
+  if (scanEventId && scanEventId === state.lastScanEventId) {
+    return;
+  }
+
   state.lastScanEventId = scanEventId;
+  resetSession();
+}
+
+function handleCoverOpened(openEventId) {
+  if (openEventId && openEventId === state.lastCoverOpenEventId) {
+    return;
+  }
+
+  state.lastCoverOpenEventId = openEventId;
+  resetSession();
+}
+
+function resetSession() {
+  state.sessionId += 1;
   state.queue = shuffle(indexes());
   state.queuePos = 0;
   state.activeIndex = null;

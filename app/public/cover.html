@@ -156,6 +156,7 @@
       let pendingPlay = null;
       let currentIndex = null;
       let lastStatusSentAt = 0;
+      let announcedCoverOpen = false;
 
       const FALLBACK_UNLOCK_AUDIO = "/mp3/Spacebarman-Accidental-Song01.mp3";
 
@@ -222,6 +223,15 @@
         socket.addEventListener("open", () => {
           reconnectDelay = 1000;
           send({ type: "hello", role: "cover" });
+
+          if (!announcedCoverOpen) {
+            announcedCoverOpen = true;
+            send({
+              type: "cover_opened",
+              openEventId: createOpenEventId()
+            });
+          }
+
           send({ type: "sync_request" });
         });
 
@@ -388,6 +398,16 @@
         }
 
         socket.send(JSON.stringify(payload));
+      }
+
+      function createOpenEventId() {
+        if (window.crypto && typeof window.crypto.randomUUID === "function") {
+          return window.crypto.randomUUID();
+        }
+
+        const stamp = Date.now();
+        const random = Math.floor(Math.random() * 1000000);
+        return `${stamp}-${random}`;
       }
 
       audio.addEventListener("timeupdate", () => {

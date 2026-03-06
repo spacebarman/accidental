@@ -157,6 +157,8 @@
       let currentIndex = null;
       let lastStatusSentAt = 0;
 
+      const FALLBACK_UNLOCK_AUDIO = "/mp3/Spacebarman-Accidental-Song01.mp3";
+
       function wsUrl() {
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
         return `${protocol}//${window.location.host}/ws`;
@@ -175,9 +177,14 @@
         audioUnlocked = true;
 
         const previousSrc = audio.src;
+        const pendingTrack = pendingPlay && tracks[pendingPlay.index] ? tracks[pendingPlay.index] : null;
+        const currentTrack = Number.isInteger(currentIndex) && tracks[currentIndex] ? tracks[currentIndex] : null;
+        const unlockSource = (pendingTrack && pendingTrack.audio) || (currentTrack && currentTrack.audio) || FALLBACK_UNLOCK_AUDIO;
 
         if (!audio.src && tracks.length > 0) {
-          audio.src = tracks[0].audio;
+          audio.src = unlockSource;
+        } else if (!audio.src) {
+          audio.src = FALLBACK_UNLOCK_AUDIO;
         }
 
         const previousVolume = audio.volume;
@@ -195,7 +202,7 @@
           audio.volume = previousVolume;
         }
 
-        if (!previousSrc) {
+        if (!previousSrc && !pendingPlay) {
           audio.removeAttribute("src");
           audio.load();
         }
@@ -311,17 +318,7 @@
         const track = tracks[index];
         const shouldSwapSource = !audio.src || !audio.src.endsWith(track.audio);
 
-        if (shouldSwapSource) {
-          audio.src = track.audio;
-        }
-
-        const seekAndPlay = () => {
-          if (Number.isFinite(startTime) && startTime > 0 && Number.isFinite(audio.duration) && startTime < audio.duration) {
-            audio.currentTime = startTime;
-          } else {
-            audio.currentTime = 0;
-          }
-
+        const playNow = () => {
           audio.play().catch(() => {
             audioUnlocked = false;
             pendingPlay = { index, startTime };
@@ -329,11 +326,43 @@
           });
         };
 
+        const applyStartTime = () => {
+          if (
+            Number.isFinite(startTime) &&
+            startTime > 0 &&
+            Number.isFinite(audio.duration) &&
+            startTime < audio.duration
+          ) {
+            audio.currentTime = startTime;
+          } else {
+            audio.currentTime = 0;
+          }
+        };
+
         if (shouldSwapSource) {
-          audio.addEventListener("loadedmetadata", seekAndPlay, { once: true });
-        } else {
-          seekAndPlay();
+          audio.src = track.audio;
         }
+
+        if (Number.isFinite(startTime) && startTime > 0) {
+          if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
+            audio.addEventListener(
+              "loadedmetadata",
+              () => {
+                applyStartTime();
+                playNow();
+              },
+              { once: true }
+            );
+            return;
+          }
+
+          applyStartTime();
+          playNow();
+          return;
+        }
+
+        audio.currentTime = 0;
+        playNow();
       }
 
       function sendStatus(force) {

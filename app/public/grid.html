@@ -36,7 +36,7 @@
         margin: 0;
         width: 100%;
         height: 100%;
-        background: radial-gradient(circle at 20% 20%, #181818 0%, var(--bg) 55%);
+        background: black;
         color: var(--muted);
       }
 
@@ -44,12 +44,14 @@
         font-family: "Rubik", sans-serif;
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: flex-start;
         padding: 2.5vmin;
+        overflow-y: auto;
       }
 
       .app {
         width: min(98vw, 680px);
+        margin: 0 auto;
       }
 
       .topline {
@@ -174,6 +176,10 @@
         font-size: 1.05em;
       }
 
+      .footer p {
+        margin: 0.4em 0;
+      }
+
       .footer a {
         color: var(--accent);
       }
@@ -182,16 +188,22 @@
         body {
           align-items: flex-start;
           padding-top: 12px;
+          overflow-y: auto;
+        }
+
+        .app {
+          width: min(96vw, calc(100vh - 120px));
         }
 
         .footer {
           margin-top: 10px;
+          font-size: clamp(11px, 1.6vmin, 15px);
         }
       }
 
       @media (max-width: 768px) {
         body {
-          overflow-y: hidden;
+          overflow-y: auto;
           align-items: flex-start;
           justify-content: center;
           padding-top: calc(min(100vw, 100vh) * 0.025);

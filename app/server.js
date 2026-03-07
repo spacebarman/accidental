@@ -1,9 +1,15 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const http = require("node:http");
+const crypto = require("node:crypto");
 const { WebSocketServer, WebSocket } = require("ws");
 
 const PORT = Number(process.env.PORT || 8787);
+const HEARTBEAT_INTERVAL_MS = 15000;
+const GRID_RESUME_WINDOW_MS = 120000;
+const CONTROLLER_COOKIE_NAME = "acc_grid_owner";
+const CONTROLLER_COOKIE_MAX_AGE_SECONDS = 86400;
+const GRID_ACCESS_DEBUG = process.env.GRID_ACCESS_DEBUG === "1";
 
 const appRoot = __dirname;
 const publicRoot = path.join(appRoot, "public");
@@ -31,7 +37,13 @@ const state = {
   currentTime: 0,
   duration: 0,
   lastScanEventId: null,
-  lastCoverOpenEventId: null
+  lastCoverOpenEventId: null,
+  gridClientCount: 0,
+  lastGridConnectedAt: null,
+  lastGridDisconnectedAt: null,
+  lastGridDisconnectReason: null,
+  controllerToken: null,
+  controllerTokenIssuedAt: null
 };
 
 const clients = {
@@ -69,18 +81,87 @@ const server = http.createServer((req, res) => {
   }
 
   if (pathname === "/grid") {
-    if (requestUrl.searchParams.get("qr") !== "true") {
+    const now = Date.now();
+    const isQrRequest = requestUrl.searchParams.get("qr") === "true";
+    const hasActiveGridClient = state.gridClientCount > 0;
+    const lastDisconnectAt = state.lastGridDisconnectedAt;
+    const requestControllerToken = getControllerTokenFromRequest(req);
+    const hasControllerToken =
+      Boolean(state.controllerToken) && requestControllerToken === state.controllerToken;
+    const isWithinResumeWindow =
+      Number.isFinite(lastDisconnectAt) && now - lastDisconnectAt <= GRID_RESUME_WINDOW_MS;
+    const elapsedSinceDisconnectMs = Number.isFinite(lastDisconnectAt)
+      ? now - lastDisconnectAt
+      : null;
+
+    if (hasActiveGridClient) {
+      const decision = isQrRequest ? "qr_blocked_in_use" : "resume_blocked_in_use";
+
+      logGridAccessDecision(decision, {
+        isQrRequest,
+        hasActiveGridClient,
+        isWithinResumeWindow,
+        elapsedSinceDisconnectMs,
+        hasControllerToken
+      });
       sendExternalLinkPage(res, {
-        title: "Grid Access",
-        heading: "Grid Access",
-        message: "This page is intended to be opened from the installation QR code. For the public album page, use:",
-        href: "https://www.spacebarman.com/accidental",
-        linkText: "www.spacebarman.com/accidental"
+        title: "'Accidental' En Ús",
+        heading: "'Accidental' En Ús",
+        message: "La instal·lació està en ús en aquest moment. Mentrestant, segueix Spacebarman a Instagram:.",
+        href: "https://www.instagram.com/spacebarman",
+        linkText: "@spacebarman"
       });
       return;
     }
 
-    serveFile(path.join(publicRoot, "grid.html"), res);
+    if (isQrRequest) {
+      const nextControllerToken = createControllerToken();
+      state.controllerToken = nextControllerToken;
+      state.controllerTokenIssuedAt = now;
+      res.setHeader("Set-Cookie", buildControllerCookie(nextControllerToken));
+
+      logGridAccessDecision("qr_allowed", {
+        isQrRequest,
+        hasActiveGridClient,
+        isWithinResumeWindow,
+        elapsedSinceDisconnectMs,
+        hasControllerToken
+      });
+
+      serveFile(path.join(publicRoot, "grid.html"), res);
+      return;
+    }
+
+    if (hasControllerToken && isWithinResumeWindow) {
+      res.setHeader("Set-Cookie", buildControllerCookie(state.controllerToken));
+
+      logGridAccessDecision("resume_allowed_grace_owner", {
+        isQrRequest,
+        hasActiveGridClient,
+        isWithinResumeWindow,
+        elapsedSinceDisconnectMs,
+        hasControllerToken
+      });
+
+      serveFile(path.join(publicRoot, "grid.html"), res);
+      return;
+    }
+
+    logGridAccessDecision("expired_blocked", {
+      isQrRequest,
+      hasActiveGridClient,
+      isWithinResumeWindow,
+      elapsedSinceDisconnectMs,
+      hasControllerToken
+    });
+
+    sendExternalLinkPage(res, {
+        title: "ACCIDENTAL",
+        heading: "ACCIDENTAL",
+        message: "Aquesta sessió de 'Accidental' ha caducat. Si us plau, escaneja de nou el codi QR d'instal·lació. Per a la pàgina de l'àlbum públic, utilitza:",
+        href: "https://www.spacebarman.com/accidental",
+        linkText: "www.spacebarman.com/accidental"
+    });
     return;
   }
 
@@ -96,6 +177,11 @@ const server = http.createServer((req, res) => {
 
   if (pathname === "/api/state") {
     sendJson(res, buildStatePayload());
+    return;
+  }
+
+  if (pathname === "/api/grid-access-debug") {
+    sendJson(res, buildGridAccessDebugPayload(req));
     return;
   }
 
@@ -124,9 +210,16 @@ const server = http.createServer((req, res) => {
 
 const wss = new WebSocketServer({ server, path: "/ws" });
 
-wss.on("connection", (socket) => {
+wss.on("connection", (socket, req) => {
   socket.role = "unknown";
+  socket.isAlive = true;
+  socket.removed = false;
+  socket.controllerToken = getControllerTokenFromRequest(req);
   clients.unknown.add(socket);
+
+  socket.on("pong", () => {
+    socket.isAlive = true;
+  });
 
   send(socket, {
     type: "hello",
@@ -157,12 +250,32 @@ wss.on("connection", (socket) => {
   });
 
   socket.on("close", () => {
-    removeClient(socket);
+    removeClient(socket, "socket_closed");
   });
 
   socket.on("error", () => {
-    removeClient(socket);
+    removeClient(socket, "socket_error");
   });
+});
+
+const heartbeatInterval = setInterval(() => {
+  for (const socket of wss.clients) {
+    if (socket.isAlive === false) {
+      removeClient(socket, "heartbeat_timeout");
+      socket.terminate();
+      continue;
+    }
+
+    socket.isAlive = false;
+
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.ping();
+    }
+  }
+}, HEARTBEAT_INTERVAL_MS);
+
+wss.on("close", () => {
+  clearInterval(heartbeatInterval);
 });
 
 server.listen(PORT, () => {
@@ -271,7 +384,7 @@ function handleMessage(socket, message) {
       return;
     }
 
-    handleGridOpened(message.scanEventId || null);
+    handleGridOpened(message.scanEventId || null, message.source || "unknown");
     return;
   }
 
@@ -333,31 +446,129 @@ function handleMessage(socket, message) {
 }
 
 function setRole(socket, role) {
-  removeClient(socket);
+  removeClient(socket, "role_change");
 
   if (role === "grid") {
+    const existingGridSocket = getAnyOtherGridSocket(socket);
+    if (existingGridSocket) {
+      send(socket, {
+        type: "access_denied",
+        reason: "grid_in_use"
+      });
+
+      // Keep one active controller at a time.
+      setTimeout(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.close(1008, "grid_in_use");
+        }
+      }, 30);
+      return;
+    }
+
     socket.role = "grid";
     clients.grid.add(socket);
+    socket.removed = false;
+    updateGridPresence("grid_connected");
     return;
   }
 
   if (role === "cover") {
     socket.role = "cover";
     clients.cover.add(socket);
+    socket.removed = false;
     return;
   }
 
   socket.role = "unknown";
   clients.unknown.add(socket);
+  socket.removed = false;
 }
 
-function removeClient(socket) {
-  clients.grid.delete(socket);
+function removeClient(socket, reason = "disconnect") {
+  if (socket.removed) {
+    return;
+  }
+
+  const wasGrid = clients.grid.delete(socket);
   clients.cover.delete(socket);
   clients.unknown.delete(socket);
+  socket.removed = true;
+
+  if (wasGrid) {
+    updateGridPresence(reason);
+  }
 }
 
-function handleGridOpened(scanEventId) {
+function updateGridPresence(reason) {
+  const nextCount = clients.grid.size;
+  const previousCount = state.gridClientCount;
+
+  if (nextCount === previousCount) {
+    return;
+  }
+
+  state.gridClientCount = nextCount;
+
+  if (nextCount > previousCount) {
+    state.lastGridConnectedAt = Date.now();
+    console.log(`[presence] Grid connected. Active grid clients: ${nextCount}`);
+  } else {
+    state.lastGridDisconnectedAt = Date.now();
+    state.lastGridDisconnectReason = reason;
+    console.log(`[presence] Grid disconnected (${reason}). Active grid clients: ${nextCount}`);
+
+    if (nextCount === 0) {
+      stopPlaybackAfterGridDisconnect();
+    }
+  }
+
+  const payload = {
+    type: "grid_presence",
+    connected: nextCount > 0,
+    gridClientCount: nextCount,
+    lastGridConnectedAt: state.lastGridConnectedAt,
+    lastGridDisconnectedAt: state.lastGridDisconnectedAt,
+    lastGridDisconnectReason: state.lastGridDisconnectReason
+  };
+
+  broadcastToRole("cover", payload);
+  broadcastToRole("unknown", payload);
+}
+
+function stopPlaybackAfterGridDisconnect() {
+  if (!state.isPlaying) {
+    return;
+  }
+
+  state.isPlaying = false;
+  state.currentTime = 0;
+  state.duration = 0;
+  state.activeIndex = null;
+
+  broadcastState();
+
+  broadcastToRole("cover", {
+    type: "stop_playback",
+    reason: "grid_disconnected",
+    sessionId: state.sessionId
+  });
+}
+
+function getAnyOtherGridSocket(currentSocket) {
+  for (const gridSocket of clients.grid) {
+    if (gridSocket !== currentSocket) {
+      return gridSocket;
+    }
+  }
+
+  return null;
+}
+
+function handleGridOpened(scanEventId, source) {
+  if (source !== "qr_scan") {
+    return;
+  }
+
   if (scanEventId && scanEventId === state.lastScanEventId) {
     return;
   }
@@ -460,7 +671,55 @@ function buildStatePayload() {
     queuePos: state.queuePos,
     isPlaying: state.isPlaying,
     currentTime: state.currentTime,
-    duration: state.duration
+    duration: state.duration,
+    gridConnected: state.gridClientCount > 0,
+    gridClientCount: state.gridClientCount,
+    lastGridConnectedAt: state.lastGridConnectedAt,
+    lastGridDisconnectedAt: state.lastGridDisconnectedAt,
+    lastGridDisconnectReason: state.lastGridDisconnectReason
+  };
+}
+
+function buildGridAccessDebugPayload(req) {
+  const now = Date.now();
+  const requestControllerToken = getControllerTokenFromRequest(req);
+  const hasServerControllerToken = Boolean(state.controllerToken);
+  const requestHasControllerToken =
+    hasServerControllerToken && requestControllerToken === state.controllerToken;
+  const elapsedSinceDisconnectMs = Number.isFinite(state.lastGridDisconnectedAt)
+    ? now - state.lastGridDisconnectedAt
+    : null;
+  const isWithinResumeWindow =
+    Number.isFinite(elapsedSinceDisconnectMs) && elapsedSinceDisconnectMs <= GRID_RESUME_WINDOW_MS;
+
+  return {
+    serverTime: now,
+    config: {
+      heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
+      resumeWindowMs: GRID_RESUME_WINDOW_MS
+    },
+    presence: {
+      gridConnected: state.gridClientCount > 0,
+      gridClientCount: state.gridClientCount,
+      lastGridConnectedAt: state.lastGridConnectedAt,
+      lastGridDisconnectedAt: state.lastGridDisconnectedAt,
+      lastGridDisconnectReason: state.lastGridDisconnectReason
+    },
+    owner: {
+      serverControllerTokenPresent: hasServerControllerToken,
+      controllerTokenIssuedAt: state.controllerTokenIssuedAt,
+      requestControllerTokenPresent: Boolean(requestControllerToken),
+      requestHasControllerToken
+    },
+    window: {
+      elapsedSinceDisconnectMs,
+      isWithinResumeWindow
+    },
+    playback: {
+      sessionId: state.sessionId,
+      activeIndex: state.activeIndex,
+      isPlaying: state.isPlaying
+    }
   };
 }
 
@@ -562,4 +821,54 @@ function serveFile(filePath, res) {
 function sendJson(res, body) {
   res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
   res.end(JSON.stringify(body));
+}
+
+function createControllerToken() {
+  return crypto.randomBytes(24).toString("hex");
+}
+
+function buildControllerCookie(token) {
+  return `${CONTROLLER_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; Max-Age=${CONTROLLER_COOKIE_MAX_AGE_SECONDS}; HttpOnly; SameSite=Lax`;
+}
+
+function parseCookies(cookieHeader) {
+  const result = {};
+  if (!cookieHeader) {
+    return result;
+  }
+
+  const pairs = cookieHeader.split(";");
+  for (const pair of pairs) {
+    const separator = pair.indexOf("=");
+    if (separator <= 0) {
+      continue;
+    }
+
+    const key = pair.slice(0, separator).trim();
+    const value = pair.slice(separator + 1).trim();
+    result[key] = decodeURIComponent(value);
+  }
+
+  return result;
+}
+
+function getControllerTokenFromRequest(req) {
+  const cookies = parseCookies(req.headers.cookie || "");
+  return cookies[CONTROLLER_COOKIE_NAME] || null;
+}
+
+function logGridAccessDecision(decision, details) {
+  if (!GRID_ACCESS_DEBUG) {
+    return;
+  }
+
+  const elapsedSeconds = Number.isFinite(details.elapsedSinceDisconnectMs)
+    ? (details.elapsedSinceDisconnectMs / 1000).toFixed(1)
+    : "n/a";
+
+  console.log(
+    `[grid-access] ${decision} | qr=${details.isQrRequest} active=${details.hasActiveGridClient} ` +
+      `within120s=${details.isWithinResumeWindow} owner=${details.hasControllerToken} ` +
+      `elapsedSinceDisconnect=${elapsedSeconds}s gridClients=${state.gridClientCount}`
+  );
 }

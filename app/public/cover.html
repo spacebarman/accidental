@@ -312,6 +312,19 @@
           return;
         }
 
+        if (message.type === "stop_playback") {
+          audio.pause();
+          audio.currentTime = 0;
+          currentIndex = null;
+          pendingPlay = null;
+          coverEl.style.backgroundImage = "none";
+          coverEl.classList.add("waiting");
+          progressFill.style.width = "0%";
+          hideUnlockMessage();
+          sendStatus(true);
+          return;
+        }
+
         if (message.type === "state_update") {
           if (Number.isInteger(message.activeIndex)) {
             currentIndex = message.activeIndex;

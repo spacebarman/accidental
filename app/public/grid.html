@@ -227,16 +227,11 @@
       <section class="footer" aria-label="Instructions">
         <strong>Instructions</strong>
         <p>
-        <div>Toca qualsevol casella per reproduir una pista. La reproducció continua en ordre aleatori.</div>
-        <div><a href="https://example.com" target="_blank" rel="noreferrer noopener">Buy this album (placeholder link)</a></div>
+        Toca qualsevol casella per reproduir una pista. La reproducció continua en ordre aleatori.
         </p>
+        <hr />
         <p>
-        <div>Toca cualqjuier casilla para reproducir una pista. La reproducción continuará en orden aleatorio.</div>
-        <div><a href="https://example.com" target="_blank" rel="noreferrer noopener">Buy this album (placeholder link)</a></div>
-        </p>
-        <p>
-        <div>Tap any tile to play a track. Playback continues in random order.</div>
-        <div><a href="https://example.com" target="_blank" rel="noreferrer noopener">Buy this album (placeholder link)</a></div>
+        Segueix a Spacebarman a Instagram: <a href="https://instagram.com/spacebarman" target="_blank" rel="noreferrer noopener">@spacebarman</a><br />
         </p>
 
       </section>
@@ -254,6 +249,8 @@
       let activeIndex = null;
       let nextIndex = null;
       let isPlaying = false;
+      const openedFromQr = new URL(window.location.href).searchParams.get("qr") === "true";
+      let blockedByServer = false;
 
       function wsUrl() {
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -266,6 +263,7 @@
       }
 
       function connect() {
+        blockedByServer = false;
         setConnectionStatus("connecting");
         socket = new WebSocket(wsUrl());
 
@@ -279,8 +277,8 @@
             announcedGridOpen = true;
             send({
               type: "grid_opened",
-              source: "qr_scan",
-              scanEventId: createScanEventId()
+              source: openedFromQr ? "qr_scan" : "resume_open",
+              scanEventId: openedFromQr ? createScanEventId() : null
             });
           }
 
@@ -298,7 +296,13 @@
           handleMessage(message);
         });
 
-        socket.addEventListener("close", () => {
+        socket.addEventListener("close", (event) => {
+          if (blockedByServer || event.code === 4409 || event.code === 1008) {
+            blockedByServer = true;
+            setConnectionStatus("in_use");
+            return;
+          }
+
           setConnectionStatus("reconnecting");
           scheduleReconnect();
         });
@@ -321,6 +325,12 @@
       }
 
       function handleMessage(message) {
+        if (message.type === "access_denied") {
+          blockedByServer = true;
+          setConnectionStatus("in_use");
+          return;
+        }
+
         if (message.type === "album_manifest") {
           tracks = message.tracks || [];
           renderGrid();
@@ -384,6 +394,18 @@
         return `${stamp}-${random}`;
       }
 
+      function stripQrParamFromUrl() {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get("qr") !== "true") {
+          return;
+        }
+
+        url.searchParams.delete("qr");
+        const query = url.searchParams.toString();
+        const cleaned = `${url.pathname}${query ? `?${query}` : ""}${url.hash}`;
+        window.history.replaceState(null, "", cleaned);
+      }
+
       function send(payload) {
         if (!socket || socket.readyState !== WebSocket.OPEN) {
           return;
@@ -392,6 +414,7 @@
         socket.send(JSON.stringify(payload));
       }
 
+      stripQrParamFromUrl();
       connect();
     </script>
   </body>

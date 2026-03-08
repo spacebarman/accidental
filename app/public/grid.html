@@ -253,22 +253,78 @@
       let blockedByServer = false;
       let wakeLockSentinel = null;
       let wakeLockRequestedByUser = false;
+      let noSleepInstance = null;
+      let noSleepEnabled = false;
+      let noSleepLoadPromise = null;
+
+      const NO_SLEEP_CDN_URL = "https://cdn.jsdelivr.net/npm/nosleep.js@0.12.0/dist/NoSleep.min.js";
+
+      function loadNoSleepLibrary() {
+        if (window.NoSleep) {
+          return Promise.resolve(true);
+        }
+
+        if (noSleepLoadPromise) {
+          return noSleepLoadPromise;
+        }
+
+        noSleepLoadPromise = new Promise((resolve) => {
+          const script = document.createElement("script");
+          script.src = NO_SLEEP_CDN_URL;
+          script.async = true;
+
+          script.addEventListener("load", () => {
+            resolve(Boolean(window.NoSleep));
+          });
+
+          script.addEventListener("error", () => {
+            resolve(false);
+          });
+
+          document.head.appendChild(script);
+        });
+
+        return noSleepLoadPromise;
+      }
+
+      async function enableNoSleepFallback() {
+        const loaded = await loadNoSleepLibrary();
+        if (!loaded || typeof window.NoSleep !== "function") {
+          return false;
+        }
+
+        if (!noSleepInstance) {
+          noSleepInstance = new window.NoSleep();
+        }
+
+        if (noSleepEnabled) {
+          return true;
+        }
+
+        try {
+          noSleepInstance.enable();
+          noSleepEnabled = true;
+          return true;
+        } catch {
+          return false;
+        }
+      }
 
       async function requestWakeLock() {
         if (!wakeLockRequestedByUser) {
-          return;
+          return false;
         }
 
         if (!("wakeLock" in navigator)) {
-          return;
+          return false;
         }
 
         if (document.visibilityState !== "visible") {
-          return;
+          return false;
         }
 
         if (wakeLockSentinel) {
-          return;
+          return true;
         }
 
         try {
@@ -276,8 +332,10 @@
           wakeLockSentinel.addEventListener("release", () => {
             wakeLockSentinel = null;
           });
+          return true;
         } catch {
           // Browser policy or power conditions can reject wake lock; ignore safely.
+          return false;
         }
       }
 
@@ -287,7 +345,11 @@
         }
 
         wakeLockRequestedByUser = true;
-        requestWakeLock();
+        requestWakeLock().then((locked) => {
+          if (!locked) {
+            enableNoSleepFallback();
+          }
+        });
       }
 
       function wsUrl() {
@@ -463,12 +525,25 @@
 
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
-          requestWakeLock();
+          requestWakeLock().then((locked) => {
+            if (!locked && wakeLockRequestedByUser) {
+              enableNoSleepFallback();
+            }
+          });
         }
       });
 
       window.addEventListener("pagehide", async () => {
         if (!wakeLockSentinel) {
+          if (noSleepInstance && noSleepEnabled) {
+            try {
+              noSleepInstance.disable();
+            } catch {
+              // Ignore NoSleep disable errors during page teardown.
+            } finally {
+              noSleepEnabled = false;
+            }
+          }
           return;
         }
 
@@ -478,6 +553,16 @@
           // Ignore release errors during page teardown.
         } finally {
           wakeLockSentinel = null;
+        }
+
+        if (noSleepInstance && noSleepEnabled) {
+          try {
+            noSleepInstance.disable();
+          } catch {
+            // Ignore NoSleep disable errors during page teardown.
+          } finally {
+            noSleepEnabled = false;
+          }
         }
       });
 

@@ -189,8 +189,22 @@
         background-position: center;
         background-size: cover;
         background-repeat: no-repeat;
+        transform: scale(1) rotate(0deg);
         transition: transform 0.15s ease-out;
         opacity: .9;
+      }
+
+      .cell.tile-motion .cell-image {
+        animation: tileMotion 360s linear 1;
+      }
+
+      @keyframes tileMotion {
+        0% {
+          transform: scale(1) rotate(0deg);
+        }
+        100% {
+          transform: scale(3) rotate(180deg);
+        }
       }
 
       .cell:hover {
@@ -777,6 +791,9 @@
 
       function setActiveCell(index) {
         if (activeCell) {
+          activeCell.classList.remove("tile-motion");
+          const previousImg = activeCell.querySelector('.cell-image');
+          if (previousImg) previousImg.style.transform = 'scale(1) rotate(0deg)';
           activeCell.classList.remove("active");
         }
 
@@ -887,15 +904,6 @@
 
         const progressValue = (audio.currentTime / audio.duration) * 100;
         progressFill.style.width = `${progressValue}%`;
-
-        if (activeCell) {
-          const scaleValue = 1 + (progressValue * 0.1);
-          const rotateValue = (progressValue / 100) * 45;
-          const img = activeCell.querySelector('.cell-image');
-          if (img) {
-            img.style.transform = `scale(${scaleValue}) rotate(${rotateValue}deg)`;
-          }
-        }
       });
 
       audio.addEventListener("ended", () => {
@@ -910,6 +918,7 @@
       audio.addEventListener("play", () => {
         if (activeCell) {
           activeCell.classList.add("active");
+          activeCell.classList.add("tile-motion");
         }
         progress.classList.add("is-visible");
         if (queue.length > queueIndex + 1) {
@@ -921,7 +930,10 @@
 
       audio.addEventListener("pause", () => {
         if (activeCell) {
+          activeCell.classList.remove("tile-motion");
           activeCell.classList.remove("active");
+          const img = activeCell.querySelector('.cell-image');
+          if (img) img.style.transform = 'scale(1) rotate(0deg)';
         }
         progress.classList.remove("is-visible");
         clearNextCell();

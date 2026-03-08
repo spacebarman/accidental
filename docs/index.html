@@ -43,11 +43,22 @@
         font-family: "BarlowCondensed", sans-serif;
       }
 
+      canvas#canvasBackground {
+        visibility: hidden;
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 0;
+        pointer-events: none;
+      }
+
       .player {
         position: relative;
         width: var(--grid-size);
         display: flex;
         flex-direction: column;
+        z-index: 10;
       }
 
       .brand {
@@ -174,6 +185,7 @@
         background-size: cover;
         background-repeat: no-repeat;
         transition: transform 0.15s ease-out;
+        opacity: .9;
       }
 
       .cell:hover {
@@ -204,10 +216,14 @@
         animation: nextPulse 2s ease-in-out infinite;
       }
 
+      .cell.all-pulse {
+        animation: nextPulse 2s ease-in-out infinite;
+      }
+
       @keyframes nextPulse {
         0%,
         100% {
-          filter: brightness(.3);
+          filter: brightness(.4);
         }
         50% {
           filter: brightness(.8);
@@ -412,6 +428,7 @@
     </style>
   </head>
   <body>
+    <canvas id="canvasBackground"></canvas>
     <div class="player">
       <div class="cover-view" id="coverView"></div>
       <div class="grid" id="grid">
@@ -474,6 +491,129 @@
     </div>
 
     <script>
+      (function () {
+        const canvas = document.getElementById("canvasBackground");
+        const ctx = canvas.getContext("2d");
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, window.innerHeight);
+        gradient.addColorStop(0, "transparent");
+        gradient.addColorStop(0.05, "rgba(255, 255, 255, 0.02)");
+        gradient.addColorStop(0.5, "rgba(255, 255, 255, 0.15)");
+        gradient.addColorStop(0.9, "rgba(255, 255, 255, 0.02)");
+        gradient.addColorStop(1, "transparent");
+
+        const CONFIG = {
+          lineCount: 15,
+          baseXSpread: 600,
+          amplitudeMin: 200,
+          amplitudeMax: 500,
+          frequencyMin: 0.01,
+          frequencyMax: 0.03,
+          lineWidth: 60,
+          opacityMin: 0.05,
+          opacityMax: 0.1
+        };
+
+        class Line {
+          constructor(currentCanvas, config) {
+            this.canvas = currentCanvas;
+            this.config = config;
+            this.reset();
+          }
+
+          reset() {
+            this.baseX =
+              this.canvas.width / 2 + (Math.random() - 0.5) * 2 * this.config.baseXSpread;
+            this.amplitude =
+              Math.random() * (this.config.amplitudeMax - this.config.amplitudeMin) +
+              this.config.amplitudeMin;
+            this.frequency =
+              Math.random() * (this.config.frequencyMax - this.config.frequencyMin) +
+              this.config.frequencyMin;
+            this.opacity =
+              Math.random() * (this.config.opacityMax - this.config.opacityMin) +
+              this.config.opacityMin;
+            this.dir = 1;
+          }
+
+          getX(elapsed) {
+            return (
+              this.baseX + this.dir * this.amplitude * Math.sin(2 * Math.PI * this.frequency * elapsed)
+            );
+          }
+
+          draw(currentCtx, elapsed) {
+            const x = this.getX(elapsed);
+            currentCtx.globalAlpha = this.opacity;
+            currentCtx.fillRect(
+              x - this.config.lineWidth / 2,
+              0,
+              this.config.lineWidth * Math.sin(2 * Math.PI * this.frequency * elapsed),
+              this.canvas.height
+            );
+          }
+        }
+
+        class AnimationManager {
+          constructor(currentCanvas, currentCtx, config) {
+            this.canvas = currentCanvas;
+            this.ctx = currentCtx;
+            this.config = config;
+            this.lines = [];
+            this.startTime = Date.now();
+          }
+
+          init() {
+            this.resize();
+            window.addEventListener("resize", () => this.resize());
+            this.animate();
+          }
+
+          resize() {
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+            this.startTime = Date.now();
+            this.lines = Array.from(
+              { length: this.config.lineCount },
+              () => new Line(this.canvas, this.config)
+            );
+          }
+
+          getElapsedSeconds(timestamp) {
+            return (timestamp - this.startTime) / 1000;
+          }
+
+          clear() {
+            this.ctx.fillStyle = "black";
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+          }
+
+          drawLines(elapsed) {
+            this.ctx.fillStyle = gradient;
+            for (const line of this.lines) {
+              line.draw(this.ctx, elapsed);
+            }
+          }
+
+          draw(timestamp) {
+            this.clear();
+            const elapsed = this.getElapsedSeconds(timestamp);
+            this.drawLines(elapsed);
+          }
+
+          animate() {
+            const tick = (timestamp) => {
+              this.draw(timestamp);
+              requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+          }
+        }
+
+        const manager = new AnimationManager(canvas, ctx, CONFIG);
+        manager.init();
+      })();
+
       // Playlist is base64-encoded JSON for obfuscation
       const noise = "WyJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMDEubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzAyLm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcwMy5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMDQubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzA1Lm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcwNi5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMDcubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzA4Lm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcwOS5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMTAubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzExLm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcxMi5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMTMubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzE0Lm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcxNS5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMTYubXAzIl0=";
 
@@ -558,6 +698,7 @@
       const viewToggleImg = viewToggle.querySelector('img');
       const playToggle = document.getElementById('playToggle');
       const playToggleImg = playToggle ? playToggle.querySelector('img') : null;
+      const canvas = document.getElementById("canvasBackground");
       const nextToggle = document.getElementById('nextToggle');
       let coverViewActive = false;
 
@@ -570,6 +711,7 @@
         if (playToggleImg) {
           playToggleImg.src = isPlaying ? 'images/icon-pause.svg' : 'images/icon-play.svg';
           playToggleImg.alt = isPlaying ? 'Pause' : 'Play';
+          canvas.style.visibility = isPlaying ? 'visible' : 'hidden';
         }
       }
 
@@ -617,8 +759,15 @@
       function showUi() {
         if (!hasStarted) {
           progress.classList.add("is-visible");
+          setAllCellsPulse(false);
           hasStarted = true;
         }
+      }
+
+      function setAllCellsPulse(enabled) {
+        cells.forEach((cell) => {
+          cell.classList.toggle("all-pulse", enabled);
+        });
       }
 
       function setActiveCell(index) {
@@ -778,8 +927,8 @@
       const initialFirstIndex = Math.floor(Math.random() * silence.length);
       queue = generateShuffledQueue(initialFirstIndex);
       queueIndex = 0;
+      setAllCellsPulse(true);
       if (queue.length > 1) {
-        setNextCell(queue[1]);
         updateCoverArt(queue[1]);
       }
 

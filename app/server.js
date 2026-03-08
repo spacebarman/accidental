@@ -73,7 +73,7 @@ const server = http.createServer((req, res) => {
     sendExternalLinkPage(res, {
       title: "Accidental",
       heading: "Accidental",
-      message: "Open the public album page:",
+      message: "Escolta'l també al teu mòbil:",
       href: "https://www.spacebarman.com/accidental",
       linkText: "www.spacebarman.com/accidental"
     });
@@ -107,7 +107,7 @@ const server = http.createServer((req, res) => {
       sendExternalLinkPage(res, {
         title: "'Accidental' En Ús",
         heading: "'Accidental' En Ús",
-        message: "La instal·lació està en ús en aquest moment. Mentrestant, segueix Spacebarman a Instagram:.",
+        message: "L'obra està en ús en aquest moment. Mentrestant, segueix Spacebarman a Instagram:.",
         href: "https://www.instagram.com/spacebarman",
         linkText: "@spacebarman"
       });
@@ -158,7 +158,7 @@ const server = http.createServer((req, res) => {
     sendExternalLinkPage(res, {
         title: "ACCIDENTAL",
         heading: "ACCIDENTAL",
-        message: "Aquesta sessió de 'Accidental' ha caducat. Si us plau, escaneja de nou el codi QR d'instal·lació. Per a la pàgina de l'àlbum públic, utilitza:",
+        message: "Aquesta sessió de 'Accidental' ha caducat. Si us plau, escaneja de nou el codi QR. O si prefereixes escoltar-lo al teu mòbil:",
         href: "https://www.spacebarman.com/accidental",
         linkText: "www.spacebarman.com/accidental"
     });

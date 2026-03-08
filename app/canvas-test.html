@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Animation Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <script>
+
+/* CANVAS ANIMATION START */
+
+
+(function() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Add three color stops
+    const gradient = ctx.createLinearGradient(0, 0, 0, window.innerHeight);
+    gradient.addColorStop(0, "transparent");
+    gradient.addColorStop(0.05, "rgba(255, 255, 255, 0.05)");
+    gradient.addColorStop(0.5, "rgba(255, 255, 255, 0.2)");
+    gradient.addColorStop(0.9, "rgba(255, 255, 255, 0.05)");
+    gradient.addColorStop(1, "transparent");
+
+    // Set the fill style and draw a rectangle
+    ctx.fillStyle = gradient;
+
+    const CONFIG = {
+        lineCount: 20,
+        baseXSpread: 600,
+        amplitudeMin: 200,
+        amplitudeMax: 500,
+        frequencyMin: 0.01,
+        frequencyMax: 0.03,
+        lineWidth: 50,
+        opacityMin: 0.05,
+        opacityMax: 0.1,
+    };
+
+    const colorDark = "black";
+    const colorLight = "white";
+
+    class Line {
+        constructor(canvas, config) {
+            this.canvas = canvas;
+            this.config = config;
+            this.reset();
+        }
+
+        reset() {
+            this.baseX = (this.canvas.width / 2) + (Math.random() - 0.5) * 2 * this.config.baseXSpread;
+            this.amplitude = Math.random() * (this.config.amplitudeMax - this.config.amplitudeMin) + this.config.amplitudeMin;
+            this.frequency = Math.random() * (this.config.frequencyMax - this.config.frequencyMin) + this.config.frequencyMin;
+            this.opacity = Math.random() * (this.config.opacityMax - this.config.opacityMin) + this.config.opacityMin;
+            this.dir = 1;
+        }
+
+        getX(elapsed) {
+            return this.baseX + this.dir * this.amplitude * Math.sin(2 * Math.PI * this.frequency * elapsed);
+        }
+
+        draw(ctx, elapsed) {
+            const x = this.getX(elapsed);
+            ctx.globalAlpha = this.opacity;
+            ctx.fillRect(x - this.config.lineWidth / 2,
+                0,
+                this.config.lineWidth * Math.sin(2 * Math.PI * this.frequency * elapsed),
+                this.canvas.height);
+        }
+    }
+
+    class AnimationManager {
+        constructor(canvas, ctx, config) {
+            this.canvas = canvas;
+            this.ctx = ctx;
+            this.config = config;
+            this.lines = [];
+            this.startTime = Date.now();
+        }
+
+        init() {
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+            this.animate();
+        }
+
+        resize() {
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+            this.startTime = Date.now();
+            this.lines = Array.from({ length: this.config.lineCount }, () => new Line(this.canvas, this.config));
+        }
+
+        getElapsedSeconds(timestamp) {
+            return (timestamp - this.startTime) / 1000;
+        }
+
+        clear() {
+            this.ctx.fillStyle = colorDark;
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        detectCollisions(elapsed) {
+            const positions = this.lines.map((line, index) => ({
+                index,
+                x: line.getX(elapsed)
+            }));
+
+            const toRemove = new Set();
+            for (let i = 0; i < positions.length; i++) {
+                for (let j = i + 1; j < positions.length; j++) {
+                    if (Math.abs(positions[i].x - positions[j].x) < this.config.lineWidth) {
+                        toRemove.add(positions[i].index);
+                        toRemove.add(positions[j].index);
+                    }
+                }
+            }
+
+            if (toRemove.size === 0) {
+                return;
+            }
+
+            this.lines = this.lines.filter((_, index) => !toRemove.has(index));
+            for (let i = 0; i < toRemove.size; i++) {
+                this.lines.push(new Line(this.canvas, this.config));
+            }
+        }
+
+        drawLines(elapsed) {
+            this.ctx.fillStyle = gradient;
+            for (const line of this.lines) {
+                line.draw(this.ctx, elapsed);
+            }
+        }
+
+        draw(timestamp) {
+            this.clear();
+            const elapsed = this.getElapsedSeconds(timestamp);
+//            this.detectCollisions(elapsed);
+            this.drawLines(elapsed);
+        }
+
+        animate() {
+            const tick = (timestamp) => {
+                this.draw(timestamp);
+                requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+        }
+    }
+
+    const manager = new AnimationManager(canvas, ctx, CONFIG);
+    manager.init();
+})();
+/* CANVAS ANIMATION END */
+
+    
+    
+</script>
+</body>
+</html>

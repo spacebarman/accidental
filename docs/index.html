@@ -313,6 +313,13 @@
         display: block;
       }
 
+      .info-dialog.kiosk-links-disabled a {
+        pointer-events: none;
+        cursor: default;
+        text-decoration: none;
+        opacity: 0.7;
+      }
+
       .info-scroll-wrapper {
         width: 100%;
         height: 100%;
@@ -637,6 +644,7 @@
       const noise = "WyJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMDEubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzAyLm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcwMy5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMDQubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzA1Lm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcwNi5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMDcubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzA4Lm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcwOS5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMTAubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzExLm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcxMi5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMTMubXAzIiwibXAzL1NwYWNlYmFybWFuLUFjY2lkZW50YWwtU29uZzE0Lm1wMyIsIm1wMy9TcGFjZWJhcm1hbi1BY2NpZGVudGFsLVNvbmcxNS5tcDMiLCJtcDMvU3BhY2ViYXJtYW4tQWNjaWRlbnRhbC1Tb25nMTYubXAzIl0=";
 
       const silence = filter();
+      const isKioskMode = new URLSearchParams(window.location.search).has("kiosk");
 
       const translations = {
         en: {
@@ -685,8 +693,11 @@
       function renderInfoContent() {
         const t = translations[currentLanguage];
         const infoContent = document.getElementById('infoContent');
+        const bandcampSection = isKioskMode
+          ? ""
+          : `<p><a href="https://spacebarman.bandcamp.com/album/accidental" target="_blank" rel="noreferrer noopener">${t.bandcampLink}</a></p>`;
         infoContent.innerHTML = `
-          <p><a href="https://spacebarman.bandcamp.com/album/accidental" target="_blank" rel="noreferrer noopener">${t.bandcampLink}</a></p>
+          ${bandcampSection}
           <h3>${t.instructions}</h3>
           <p>${t.instructionsText}</p>
           <h3>${t.aboutAlbum}</h3>
@@ -703,6 +714,25 @@
       function updateCloseButtonText() {
         const closeBtn = document.getElementById('infoClose');
         closeBtn.textContent = translations[currentLanguage].closeBtn;
+      }
+
+      function applyKioskModeToInfoDialog() {
+        if (!isKioskMode) {
+          return;
+        }
+
+        const dialog = document.getElementById("infoDialog");
+        if (!dialog) {
+          return;
+        }
+
+        dialog.classList.add("kiosk-links-disabled");
+
+        const links = dialog.querySelectorAll("a");
+        links.forEach((link) => {
+          link.setAttribute("aria-disabled", "true");
+          link.setAttribute("tabindex", "-1");
+        });
       }
 
       const audio = new Audio();
@@ -960,6 +990,18 @@
         });
       }
 
+      if (isKioskMode) {
+        infoDialog.addEventListener("click", (event) => {
+          const link = event.target.closest("a");
+          if (!link || !infoDialog.contains(link)) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+        });
+      }
+
       infoClose.addEventListener('click', () => {
         infoDialog.classList.remove('visible');
       });
@@ -979,11 +1021,13 @@
         localStorage.setItem('accidental-language', currentLanguage);
         renderInfoContent();
         updateCloseButtonText();
+        applyKioskModeToInfoDialog();
       });
 
       // Initialize info content
       renderInfoContent();
       updateCloseButtonText();
+      applyKioskModeToInfoDialog();
 
       viewToggle.addEventListener('click', toggleViewMode);
       playToggle.addEventListener('click', () => {

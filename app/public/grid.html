@@ -257,7 +257,7 @@
       let noSleepEnabled = false;
       let noSleepLoadPromise = null;
 
-      const NO_SLEEP_CDN_URL = "https://cdn.jsdelivr.net/npm/nosleep.js@0.12.0/dist/NoSleep.min.js";
+      const NO_SLEEP_LOCAL_URL = "/public/vendor/NoSleep.min.js";
 
       function loadNoSleepLibrary() {
         if (window.NoSleep) {
@@ -270,7 +270,7 @@
 
         noSleepLoadPromise = new Promise((resolve) => {
           const script = document.createElement("script");
-          script.src = NO_SLEEP_CDN_URL;
+          script.src = NO_SLEEP_LOCAL_URL;
           script.async = true;
 
           script.addEventListener("load", () => {

@@ -251,6 +251,44 @@
       let isPlaying = false;
       const openedFromQr = new URL(window.location.href).searchParams.get("qr") === "true";
       let blockedByServer = false;
+      let wakeLockSentinel = null;
+      let wakeLockRequestedByUser = false;
+
+      async function requestWakeLock() {
+        if (!wakeLockRequestedByUser) {
+          return;
+        }
+
+        if (!("wakeLock" in navigator)) {
+          return;
+        }
+
+        if (document.visibilityState !== "visible") {
+          return;
+        }
+
+        if (wakeLockSentinel) {
+          return;
+        }
+
+        try {
+          wakeLockSentinel = await navigator.wakeLock.request("screen");
+          wakeLockSentinel.addEventListener("release", () => {
+            wakeLockSentinel = null;
+          });
+        } catch {
+          // Browser policy or power conditions can reject wake lock; ignore safely.
+        }
+      }
+
+      function markWakeLockIntent() {
+        if (wakeLockRequestedByUser) {
+          return;
+        }
+
+        wakeLockRequestedByUser = true;
+        requestWakeLock();
+      }
 
       function wsUrl() {
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -363,6 +401,7 @@
           button.appendChild(playIcon);
 
           button.addEventListener("click", () => {
+            markWakeLockIntent();
             send({ type: "select_track", index: track.index });
           });
 
@@ -413,6 +452,34 @@
 
         socket.send(JSON.stringify(payload));
       }
+
+      document.addEventListener("pointerdown", markWakeLockIntent, { passive: true });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+          markWakeLockIntent();
+        }
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          requestWakeLock();
+        }
+      });
+
+      window.addEventListener("pagehide", async () => {
+        if (!wakeLockSentinel) {
+          return;
+        }
+
+        try {
+          await wakeLockSentinel.release();
+        } catch {
+          // Ignore release errors during page teardown.
+        } finally {
+          wakeLockSentinel = null;
+        }
+      });
 
       stripQrParamFromUrl();
       connect();

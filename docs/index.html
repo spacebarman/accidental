@@ -138,9 +138,14 @@
       .cell {
         position: relative;
         overflow: hidden;
-        transition: opacity 150ms linear;
+        transform: scale(1);
+        transition: opacity 150ms linear, transform 180ms ease;
         filter: brightness(0.7);
         cursor: pointer;
+      }
+
+      .cell:active {
+        transform: scale(0.95);
       }
 
       .play-flash-overlay {

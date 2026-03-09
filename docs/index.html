@@ -495,7 +495,7 @@
       <div class="brand">
         <div>
           <span>
-            <a href="https://spacebarman.bandcamp.com/album/accidental" target="_blank" rel="noreferrer noopener">SPACEBARMAN · ACCIDENTAL</a>
+            <a id="brandLink" href="https://spacebarman.bandcamp.com/album/accidental" target="_blank" rel="noreferrer noopener">SPACEBARMAN · ACCIDENTAL</a>
           </span>
         </div>
 
@@ -732,6 +732,28 @@
         links.forEach((link) => {
           link.setAttribute("aria-disabled", "true");
           link.setAttribute("tabindex", "-1");
+        });
+      }
+
+      function applyKioskModeToBrandLink() {
+        if (!isKioskMode) {
+          return;
+        }
+
+        const brandLink = document.getElementById("brandLink");
+        if (!brandLink) {
+          return;
+        }
+
+        brandLink.style.pointerEvents = "none";
+        brandLink.style.cursor = "default";
+        brandLink.style.textDecoration = "none";
+        brandLink.style.opacity = "0.7";
+        brandLink.setAttribute("aria-disabled", "true");
+        brandLink.setAttribute("tabindex", "-1");
+        brandLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
         });
       }
 
@@ -1022,12 +1044,14 @@
         renderInfoContent();
         updateCloseButtonText();
         applyKioskModeToInfoDialog();
+        applyKioskModeToBrandLink();
       });
 
       // Initialize info content
       renderInfoContent();
       updateCloseButtonText();
       applyKioskModeToInfoDialog();
+      applyKioskModeToBrandLink();
 
       viewToggle.addEventListener('click', toggleViewMode);
       playToggle.addEventListener('click', () => {

@@ -393,7 +393,6 @@
         background-repeat: no-repeat;
         display: none;
         z-index: 5;
-        cursor: pointer;
         overflow: hidden;
       }
 
@@ -1073,13 +1072,15 @@
       }
 
       coverView.addEventListener('click', () => {
+        /*
         if (audio.paused) {
           audio.play();
         } else {
           audio.pause();
         }
+        */
       });
-      // If you ever need to log or display the decoded URL, use decodeTrack(playlist[index])
+
 
       // Keyboard interaction
       document.addEventListener('keydown', (e) => {

@@ -160,12 +160,12 @@
         pointer-events: none;
         z-index: 10;
         opacity: 0;
-        transition: opacity 0.5s;
+        /* transition: opacity 0.5s; */
       }
 
       .play-flash-overlay.visible {
         opacity: 1;
-        animation: play-flash-fade 3s forwards;
+        /* animation: play-flash-fade 3s forwards; */
       }
 
       .play-flash-icon {
@@ -391,13 +391,16 @@
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        display: none;
+        opacity: 0;
+        pointer-events: none;
         z-index: 5;
         overflow: hidden;
+        transition: opacity 300ms ease-in-out;
       }
 
       .cover-view.visible {
-        display: block;
+        opacity: 1;
+        pointer-events: auto;
       }
 
       @media (max-width: 768px) {
@@ -792,13 +795,26 @@
         coverView.style.backgroundImage = `url('${coverPath}')`;
       }
 
-      function toggleViewMode() {
-        coverViewActive = !coverViewActive;
-        coverView.classList.toggle('visible');
-        viewToggleImg.src = coverViewActive ? 'images/icon-grid.svg' : 'images/icon-cover.svg';
-        if (coverViewActive && audio.src) {
-          updateCoverArt(activeIndex);
+      function setViewMode(mode) {
+        const isGridMode = mode === 'grid';
+        const isCoverMode = mode === 'cover';
+        
+        if (isGridMode && coverViewActive) {
+          coverViewActive = false;
+          coverView.classList.remove('visible');
+          viewToggleImg.src = 'images/icon-cover.svg';
+        } else if (isCoverMode && !coverViewActive) {
+          coverViewActive = true;
+          coverView.classList.add('visible');
+          viewToggleImg.src = 'images/icon-grid.svg';
+          if (audio.src) {
+            updateCoverArt(activeIndex);
+          }
         }
+      }
+
+      function toggleViewMode() {
+        setViewMode(coverViewActive ? 'grid' : 'cover');
       }
 
       let hasStarted = false;
@@ -924,7 +940,7 @@
             void overlay.offsetWidth; // Force reflow to restart animation
             overlay.classList.add('visible');
             setTimeout(() => {
-              overlay.classList.remove('visible');
+              //overlay.classList.remove('visible');
             }, 3000);
           }
         }
@@ -935,6 +951,7 @@
           if (hasStarted && index === activeIndex) {
             if (audio.paused) {
               audio.play();
+              setViewMode('cover');
             } else {
               audio.pause();
             }
@@ -944,6 +961,7 @@
           queue = generateShuffledQueue(index);
           queueIndex = 0;
           playTrack(index);
+          setViewMode('cover');
         });
       });
 
@@ -1072,13 +1090,7 @@
       }
 
       coverView.addEventListener('click', () => {
-        /*
-        if (audio.paused) {
-          audio.play();
-        } else {
-          audio.pause();
-        }
-        */
+        setViewMode('grid');
       });
 
 

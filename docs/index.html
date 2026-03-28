@@ -826,6 +826,123 @@
       let queue = [];
       let queueIndex = 0;
 
+      const GA_COMPLETE_THRESHOLD = 0.9;
+      const GA_PARTIAL_MIN_THRESHOLD = 0.1;
+
+      function createPlaySessionId() {
+        if (window.crypto && typeof window.crypto.randomUUID === "function") {
+          return window.crypto.randomUUID();
+        }
+        return `session-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      }
+
+      const playSessionId = createPlaySessionId();
+      const gaPlaybackState = {
+        trackIndex: null,
+        startedLogged: false,
+        completedLogged: false,
+        partialLogged: false,
+        maxProgress: 0,
+        startSource: "manual",
+      };
+
+      function getCurrentViewMode() {
+        return coverViewActive ? "cover" : "grid";
+      }
+
+      function gaTrackParams(index) {
+        const src = silence[index] || "";
+        const filename = src.split("/").pop() || src;
+        return {
+          track_id: String(index + 1).padStart(2, "0"),
+          track_index: index + 1,
+          track_file: filename,
+          play_session_id: playSessionId,
+          kiosk_mode: isKioskMode,
+          view_mode: getCurrentViewMode(),
+        };
+      }
+
+      function gaUiParams() {
+        return {
+          play_session_id: playSessionId,
+          kiosk_mode: isKioskMode,
+          view_mode: getCurrentViewMode(),
+          has_audio: Boolean(audio.src),
+          is_paused: audio.paused,
+        };
+      }
+
+      function sendGaEvent(eventName, params) {
+        if (typeof gtag !== "function") {
+          return;
+        }
+        gtag("event", eventName, params);
+      }
+
+      function resetGaPlaybackState(index, source = "manual") {
+        gaPlaybackState.trackIndex = index;
+        gaPlaybackState.startedLogged = false;
+        gaPlaybackState.completedLogged = false;
+        gaPlaybackState.partialLogged = false;
+        gaPlaybackState.maxProgress = 0;
+        gaPlaybackState.startSource = source;
+      }
+
+      function updateGaProgress() {
+        if (gaPlaybackState.trackIndex === null) {
+          return;
+        }
+        if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
+          return;
+        }
+        const progress = audio.currentTime / audio.duration;
+        if (Number.isFinite(progress)) {
+          gaPlaybackState.maxProgress = Math.max(gaPlaybackState.maxProgress, progress);
+        }
+      }
+
+      function logTrackComplete(reason) {
+        if (gaPlaybackState.trackIndex === null || gaPlaybackState.completedLogged) {
+          return;
+        }
+        sendGaEvent("song_complete", {
+          ...gaTrackParams(gaPlaybackState.trackIndex),
+          completion_reason: reason,
+          autoplay_transition: gaPlaybackState.startSource === "autoplay",
+          listen_percent: Math.round(Math.min(gaPlaybackState.maxProgress, 1) * 100),
+        });
+        gaPlaybackState.completedLogged = true;
+      }
+
+      function logTrackPartial(reason) {
+        if (gaPlaybackState.trackIndex === null || gaPlaybackState.partialLogged) {
+          return;
+        }
+        if (gaPlaybackState.completedLogged || gaPlaybackState.maxProgress < GA_PARTIAL_MIN_THRESHOLD) {
+          return;
+        }
+        sendGaEvent("song_partial", {
+          ...gaTrackParams(gaPlaybackState.trackIndex),
+          partial_reason: reason,
+          autoplay_transition: gaPlaybackState.startSource === "autoplay",
+          listen_percent: Math.round(Math.min(gaPlaybackState.maxProgress, 1) * 100),
+        });
+        gaPlaybackState.partialLogged = true;
+      }
+
+      function finalizeCurrentTrack(reason) {
+        if (gaPlaybackState.trackIndex === null) {
+          return;
+        }
+        updateGaProgress();
+        if (gaPlaybackState.maxProgress >= GA_COMPLETE_THRESHOLD) {
+          logTrackComplete(reason);
+          return;
+        }
+        logTrackPartial(reason);
+      }
+
       function generateShuffledQueue(firstIndex) {
         const shuffled = [];
         const remaining = [];
@@ -905,7 +1022,9 @@
         return nextIndex;
       }
 
-      function playTrack(index) {
+      function playTrack(index, source = "manual") {
+        finalizeCurrentTrack("track_change");
+
         if (activeCell) {
           const img = activeCell.querySelector('.cell-image');
           if (img) img.style.transform = 'scale(1) rotate(0deg)';
@@ -920,6 +1039,7 @@
         }
         audio.src = silence[index];
         audio.currentTime = 0;
+        resetGaPlaybackState(index, source);
         audio.play();
         showUi();
         if (queue.length > queueIndex + 1) {
@@ -968,6 +1088,11 @@
             return;
           }
 
+          sendGaEvent("track_select", {
+            ...gaTrackParams(index),
+            ...gaUiParams(),
+          });
+
           queue = generateShuffledQueue(index);
           queueIndex = 0;
           playTrack(index);
@@ -982,19 +1107,34 @@
         }
 
         const progressValue = (audio.currentTime / audio.duration) * 100;
+        updateGaProgress();
+        if (!gaPlaybackState.completedLogged && gaPlaybackState.maxProgress >= GA_COMPLETE_THRESHOLD) {
+          logTrackComplete("threshold_90");
+        }
         progressFill.style.width = `${progressValue}%`;
       });
 
       audio.addEventListener("ended", () => {
+        updateGaProgress();
+        logTrackComplete("ended");
+
         queueIndex++;
         if (queueIndex >= queue.length) {
           queueIndex = 0;
           queue = generateShuffledQueue(queue[0]);
         }
-        playTrack(queue[queueIndex]);
+        playTrack(queue[queueIndex], "autoplay");
       });
 
       audio.addEventListener("play", () => {
+        if (gaPlaybackState.trackIndex !== null && !gaPlaybackState.startedLogged) {
+          sendGaEvent("song_start", {
+            ...gaTrackParams(gaPlaybackState.trackIndex),
+            autoplay_transition: gaPlaybackState.startSource === "autoplay",
+          });
+          gaPlaybackState.startedLogged = true;
+        }
+
         if (activeCell) {
           activeCell.classList.add("active");
           activeCell.classList.add("tile-motion");
@@ -1008,6 +1148,8 @@
       });
 
       audio.addEventListener("pause", () => {
+        updateGaProgress();
+
         if (activeCell) {
           activeCell.classList.remove("tile-motion");
           activeCell.classList.remove("active");
@@ -1083,6 +1225,8 @@
 
       viewToggle.addEventListener('click', toggleViewMode);
       playToggle.addEventListener('click', () => {
+        sendGaEvent("play_toggle", gaUiParams());
+
         if (!audio.src) {
           queue = generateShuffledQueue(nextIndex);
           queueIndex = 0;
@@ -1097,11 +1241,18 @@
         }
       });
       if (nextToggle) {
-        nextToggle.addEventListener('click', playNextTrack);
+        nextToggle.addEventListener('click', () => {
+          sendGaEvent("next_click", { source: "button", ...gaUiParams() });
+          playNextTrack();
+        });
       }
 
       coverView.addEventListener('click', () => {
         setViewMode('grid');
+      });
+
+      window.addEventListener("beforeunload", () => {
+        finalizeCurrentTrack("page_unload");
       });
 
 
@@ -1125,6 +1276,7 @@
         } else if (e.key === 'o' || e.key === 'O') {
           toggleViewMode();
         } else if (e.key === 'n' || e.key === 'N') {
+          sendGaEvent("next_click", { source: "keyboard", ...gaUiParams() });
           playNextTrack();
         }
       });

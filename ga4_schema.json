@@ -1,0 +1,89 @@
+{
+  "propertyId": "YOUR_GA4_PROPERTY_ID",
+  "customDimensions": [
+    {
+      "displayName": "Track ID",
+      "parameterName": "track_id",
+      "description": "Stable two-digit track identifier",
+      "scope": "EVENT"
+    },
+    {
+      "displayName": "Track Index",
+      "parameterName": "track_index",
+      "description": "1-based track index",
+      "scope": "EVENT"
+    },
+    {
+      "displayName": "Track File",
+      "parameterName": "track_file",
+      "description": "Audio filename",
+      "scope": "EVENT"
+    },
+    {
+      "displayName": "Play Session ID",
+      "parameterName": "play_session_id",
+      "description": "Per-page-load session id",
+      "scope": "EVENT"
+    },
+    {
+      "displayName": "Kiosk Mode",
+      "parameterName": "kiosk_mode",
+      "description": "Whether ?kiosk was present",
+      "scope": "EVENT"
+    },
+    {
+      "displayName": "View Mode",
+      "parameterName": "view_mode",
+      "description": "grid or cover",
+      "scope": "EVENT"
+    },
+    {
+      "displayName": "Completion Reason",
+      "parameterName": "completion_reason",
+      "description": "ended or threshold_90",
+      "scope": "EVENT"
+    },
+    {
+      "displayName": "Partial Reason",
+      "parameterName": "partial_reason",
+      "description": "track_change or page_unload",
+      "scope": "EVENT"
+    },
+    {
+      "displayName": "Autoplay Transition",
+      "parameterName": "autoplay_transition",
+      "description": "True when track started by auto-advance",
+      "scope": "EVENT"
+    },
+    {
+      "displayName": "Has Audio",
+      "parameterName": "has_audio",
+      "description": "Audio source initialized",
+      "scope": "EVENT"
+    },
+    {
+      "displayName": "Is Paused",
+      "parameterName": "is_paused",
+      "description": "Player paused state",
+      "scope": "EVENT"
+    },
+    {
+      "displayName": "Source",
+      "parameterName": "source",
+      "description": "UI source such as button or keyboard",
+      "scope": "EVENT"
+    }
+  ],
+  "customMetrics": [
+    {
+      "displayName": "Listen Percent",
+      "parameterName": "listen_percent",
+      "description": "Percent listened at completion/partial"
+    }
+  ],
+  "keyEvents": [
+    {
+      "eventName": "song_complete"
+    }
+  ]
+}

@@ -858,7 +858,7 @@
           track_index: index + 1,
           track_file: filename,
           play_session_id: playSessionId,
-          kiosk_mode: isKioskMode,
+          kiosk_mode: String(isKioskMode),
           view_mode: getCurrentViewMode(),
         };
       }
@@ -866,7 +866,7 @@
       function gaUiParams() {
         return {
           play_session_id: playSessionId,
-          kiosk_mode: isKioskMode,
+          kiosk_mode: String(isKioskMode),
           view_mode: getCurrentViewMode(),
           has_audio: Boolean(audio.src),
           is_paused: audio.paused,

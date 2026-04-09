@@ -15,6 +15,11 @@
  *   CanvasBg.show()   — make the canvas visible
  *   CanvasBg.hide()   — hide the canvas
  *   CanvasBg.config   — the active config object (changes take effect on next resize)
+ *
+ * Config options (with defaults):
+ *   lineCount: 15, baseXSpread: 600, amplitudeMin: 200, amplitudeMax: 500,
+ *   frequencyMin: 0.01, frequencyMax: 0.03, lineWidth: 60,
+ *   opacityMin: 0.05, opacityMax: 0.1, backgroundColor: "black"
  */
 window.CanvasBg = (function () {
   const CONFIG = Object.assign(
@@ -27,7 +32,8 @@ window.CanvasBg = (function () {
       frequencyMax: 0.03,
       lineWidth: 60,
       opacityMin: 0.05,
-      opacityMax: 0.1
+      opacityMax: 0.1,
+      backgroundColor: "black"
     },
     window.CanvasBgConfig || {}
   );
@@ -72,7 +78,7 @@ window.CanvasBg = (function () {
   const ctx = canvas.getContext("2d");
   let gradient;
   let lines = [];
-  let startTime = Date.now();
+  let startTime = null;
 
   function createGradient() {
     gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -100,20 +106,24 @@ window.CanvasBg = (function () {
       this.opacity =
         Math.random() * (CONFIG.opacityMax - CONFIG.opacityMin) +
         CONFIG.opacityMin;
+      // Random phase offset reproduces the original's behaviour where a large
+      // elapsed value put each line at an arbitrary sin() phase from frame 1.
+      this.phaseOffset = Math.random() * (1 / this.frequency);
       this.dir = 1;
     }
 
     draw(elapsed) {
+      const t = elapsed + this.phaseOffset;
       const x =
         this.baseX +
         this.dir *
           this.amplitude *
-          Math.sin(2 * Math.PI * this.frequency * elapsed);
+          Math.sin(2 * Math.PI * this.frequency * t);
       ctx.globalAlpha = this.opacity;
       ctx.fillRect(
         x - CONFIG.lineWidth / 2,
         0,
-        CONFIG.lineWidth * Math.sin(2 * Math.PI * this.frequency * elapsed),
+        CONFIG.lineWidth * Math.sin(2 * Math.PI * this.frequency * t),
         canvas.height
       );
     }
@@ -122,14 +132,16 @@ window.CanvasBg = (function () {
   function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    startTime = Date.now();
+    startTime = null; // reset so next tick re-anchors the start time
     createGradient();
     lines = Array.from({ length: CONFIG.lineCount }, () => new Line());
   }
 
   function tick(timestamp) {
+    if (startTime === null) startTime = timestamp;
+
     ctx.globalAlpha = 1;
-    ctx.fillStyle = "black";
+    ctx.fillStyle = CONFIG.backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const elapsed = (timestamp - startTime) / 1000;

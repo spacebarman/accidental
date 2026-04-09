@@ -19,7 +19,8 @@
  * Config options (with defaults):
  *   lineCount: 15, baseXSpread: 600, amplitudeMin: 200, amplitudeMax: 500,
  *   frequencyMin: 0.01, frequencyMax: 0.03, lineWidth: 60,
- *   opacityMin: 0.05, opacityMax: 0.1, backgroundColor: "black"
+ *   opacityMin: 0.05, opacityMax: 0.1, backgroundColor: "black",
+ *   startHidden: false
  */
 window.CanvasBg = (function () {
   const CONFIG = Object.assign(
@@ -33,7 +34,8 @@ window.CanvasBg = (function () {
       lineWidth: 60,
       opacityMin: 0.05,
       opacityMax: 0.1,
-      backgroundColor: "black"
+      backgroundColor: "black",
+      startHidden: false
     },
     window.CanvasBgConfig || {}
   );
@@ -47,7 +49,8 @@ window.CanvasBg = (function () {
     height: "100vh",
     zIndex: "0",
     pointerEvents: "none",
-    visibility: "visible"
+    opacity: CONFIG.startHidden ? "0" : "1",
+    transition: "opacity 0.5s ease"
   });
   document.body.prepend(canvas);
 
@@ -159,10 +162,10 @@ window.CanvasBg = (function () {
 
   return {
     show() {
-      canvas.style.visibility = "visible";
+      canvas.style.opacity = "1";
     },
     hide() {
-      canvas.style.visibility = "hidden";
+      canvas.style.opacity = "0";
     },
     config: CONFIG
   };
